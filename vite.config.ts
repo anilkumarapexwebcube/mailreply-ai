@@ -20,16 +20,20 @@ export default defineConfig({
     tailwindcss(),
     tsconfigPaths({ projects: ["./tsconfig.json"] }),
     nitro({
-      preset: "cloudflare-module",
-      output: {
-        dir: "dist",
-        serverDir: "dist/server",
-        publicDir: "dist/client"
-      },
-      cloudflare: {
-        nodeCompat: true,
-        deployConfig: true
-      }
+      preset: process.env.VERCEL ? "vercel" : "cloudflare-module",
+      ...(process.env.VERCEL
+        ? {}
+        : {
+            output: {
+              dir: "dist",
+              serverDir: "dist/server",
+              publicDir: "dist/client",
+            },
+            cloudflare: {
+              nodeCompat: true,
+              deployConfig: true,
+            },
+          }),
     }),
   ],
   resolve: {
