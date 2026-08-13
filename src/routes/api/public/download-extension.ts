@@ -118,11 +118,27 @@ export const Route = createFileRoute("/api/public/download-extension")({
   server: {
     handlers: {
       GET: async ({ request }) => {
-        // Derive the base URL from the incoming request so this works in any
-        // environment (localhost dev, staging, production) without config changes.
         const reqUrl = new URL(request.url);
         const apiBase = `${reqUrl.protocol}//${reqUrl.host}`;
 
+        // On Vercel (and any deployed environment), the extension/ source directory
+        // is not available in the server runtime. Serve the pre-built static zip
+        // directly from /public, which Vercel hosts as a static asset.
+        // In local dev, we still build dynamically so the correct localhost URL
+        // gets injected into background.js / config.js / manifest.json.
+        const isProduction = !!process.env['VERCEL'] || process.env['NODE_ENV'] === 'production';
+
+        if (isProduction) {
+          // Redirect to the static pre-built zip served from /public
+          return new Response(null, {
+            status: 302,
+            headers: {
+              Location: `${apiBase}/mailreply-ai-extension.zip`,
+            },
+          });
+        }
+
+        // ── Local dev: build ZIP dynamically so localhost URL is injected ──
         const extensionDir = join(process.cwd(), "extension");
         const fileNames = await readdir(extensionDir);
 

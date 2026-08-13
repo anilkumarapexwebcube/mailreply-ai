@@ -45,15 +45,27 @@ function AuthPage() {
     setBusy(true);
     try {
       if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
+        // Fallback to production URL in case window.location.origin is not set correctly
+        const redirectTo =
+          window.location.origin && window.location.origin !== "null"
+            ? window.location.origin
+            : "https://mailreplyai.vercel.app";
+        const { data: signUpData, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
-            emailRedirectTo: window.location.origin,
+            emailRedirectTo: redirectTo,
             data: { full_name: name },
           },
         });
         if (error) throw error;
+        // If identities is empty, email confirmation is required
+        const needsConfirmation =
+          !signUpData.session && signUpData.user?.identities?.length === 0;
+        if (needsConfirmation) {
+          toast.success("Account created! Please check your email to confirm your account.");
+          return;
+        }
         toast.success("Account created. You're signed in.");
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
