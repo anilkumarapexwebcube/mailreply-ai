@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>MailReply AI</title>
+    <style>
+      :root {
+        color-scheme: light;
+      }
+      body {
+        width: 320px;
+        margin: 0;
+        padding: 18px;
+        font: 400 13px/1.5 "Google Sans", Roboto, Arial, sans-serif;
+        background: #fffdf9;
+        color: #2b2018;
+      }
+      h1 {
+        margin: 0 0 4px;
+        font-size: 16px;
+      }
+      p.sub {
+        margin: 0 0 16px;
+        color: #8a7868;
+        font-size: 12px;
+      }
+      label {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 11px;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: #8a7868;
+      }
+      input {
+        width: 100%;
+        box-sizing: border-box;
+        border: 1px solid #e2d6c6;
+        border-radius: 10px;
+        padding: 9px 10px;
+        font: inherit;
+        background: #fff;
+      }
+      button {
+        width: 100%;
+        margin-top: 10px;
+        border: 1px solid transparent;
+        border-radius: 10px;
+        padding: 9px 12px;
+        font: 500 13px/1 inherit;
+        cursor: pointer;
+        background: #c2410c;
+        color: #fff;
+      }
+      button.ghost {
+        background: #fff;
+        border-color: #e2d6c6;
+        color: #2b2018;
+      }
+      #state {
+        margin-top: 14px;
+        font-size: 12px;
+        color: #8a7868;
+      }
+      #state.ok {
+        color: #15803d;
+      }
+      #state.bad {
+        color: #b91c1c;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>MailReply AI</h1>
+    <p class="sub">Paste the pairing key from your MailReply AI dashboard.</p>
+    <label for="token">Pairing key</label>
+    <input id="token" type="password" placeholder="mr_…" autocomplete="off" />
+    <button id="save" type="button">Save &amp; check connection</button>
+    <button id="dashboard" class="ghost" type="button">Open dashboard</button>
+    <div id="state">Not checked yet.</div>
+    <script src="popup.js"></script>
+  </body>
+</html>
