@@ -16,7 +16,11 @@ const API_BASE = 'https://mailreplyai.vercel.app';
 // 1. Run Vite build for extension JS files
 console.log('Building extension scripts with Vite...');
 try {
-  execSync('npx vite build -c vite.config.extension.ts', { stdio: 'inherit', cwd: root });
+  execSync('npx vite build -c vite.config.extension.ts', { 
+    stdio: 'inherit', 
+    cwd: root,
+    env: { ...process.env, MAILREPLY_API_BASE: API_BASE }
+  });
 } catch (error) {
   console.error('Vite build failed!');
   process.exit(1);
@@ -103,16 +107,6 @@ const files = [];
 
 for (const name of fileNames) {
   let data = readFileSync(join(distDir, name));
-
-  if (name === 'background.js' || name === 'config.js') {
-    const text = data
-      .toString('utf8')
-      .replace(
-        /const MAILREPLY_API_BASE\s*=\s*["'][^"']*["']/g,
-        `const MAILREPLY_API_BASE = "${API_BASE}"`,
-      );
-    data = Buffer.from(text, 'utf8');
-  }
 
   if (name === 'manifest.json') {
     const manifest = JSON.parse(data.toString('utf8'));
