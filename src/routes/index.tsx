@@ -68,14 +68,8 @@ function Home() {
 
 function Landing() {
   return (
-    <Shell
-      right={
-        <Button asChild size="sm">
-          <Link to="/auth">Get started</Link>
-        </Button>
-      }
-    >
-      <main className="mx-auto max-w-5xl px-6 pb-24">
+    <Shell rightNav={<Button asChild size="sm"><Link to="/auth">Get started</Link></Button>}>
+      <main className="mx-auto w-full max-w-5xl px-6 py-12 md:py-24">
         <section className="pt-10 pb-16 md:pt-20">
           <Badge variant="secondary" className="mb-6 rounded-full px-3 py-1">
             <Sparkles className="mr-1.5 size-3" /> Gmail-native reply assistant

@@ -14,8 +14,16 @@ function json(body: unknown, status = 200) {
 }
 
 interface Payload {
+  platform?: "gmail" | "whatsapp";
   threadId?: unknown;
   subject?: unknown;
+  conversation?: unknown;
+  instructions?: {
+    instruction?: unknown;
+    tone?: unknown;
+    length?: unknown;
+  };
+  // Legacy flat fields
   instruction?: unknown;
   tone?: unknown;
   length?: unknown;
@@ -46,13 +54,16 @@ export const Route = createFileRoute("/api/public/extension/generate-reply")({
         const { generateReplyForUser, ReplyError } = await import("@/server/replyFlow.server");
         try {
           const result = await generateReplyForUser(userId, {
+            platform: typeof payload.platform === "string" ? payload.platform : "gmail",
+            ...(payload.conversation ? { conversation: payload.conversation as any } : {}),
             ...(str(payload.threadId, 200) ? { threadId: str(payload.threadId, 200)! } : {}),
             ...(str(payload.subject, 500) ? { subject: str(payload.subject, 500)! } : {}),
-            ...(str(payload.instruction, 1500)
-              ? { instruction: str(payload.instruction, 1500)! }
-              : {}),
-            ...(str(payload.tone, 40) ? { tone: str(payload.tone, 40)! } : {}),
-            ...(str(payload.length, 40) ? { length: str(payload.length, 40)! } : {}),
+            
+            // Support both new nested instructions and legacy flat fields
+            instruction: str(payload.instructions?.instruction || payload.instruction, 1500) || "",
+            tone: str(payload.instructions?.tone || payload.tone, 40) || "",
+            length: str(payload.instructions?.length || payload.length, 40) || "",
+            
             signal: request.signal,
           });
           return json(result);
