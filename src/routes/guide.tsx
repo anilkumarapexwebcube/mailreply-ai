@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Mail, Plug, Sparkles, ShieldCheck, Download, KeyRound, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import brandLogo from "@/assets/mailreply-logo.png";
+import { Shell } from "@/components/layout/Shell";
 
 export const Route = createFileRoute("/guide")({
   head: () => ({
@@ -15,24 +15,7 @@ export const Route = createFileRoute("/guide")({
 
 function GuidePage() {
   return (
-    <div className="grain-bg min-h-screen">
-      {/* Header */}
-      <header className="mx-auto flex max-w-5xl items-center justify-between px-6 py-6">
-        <Link to="/" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
-          <img
-            src={brandLogo}
-            alt="MailReply AI logo"
-            width={36}
-            height={36}
-            className="size-9 rounded-xl"
-          />
-          <span className="font-display text-lg font-semibold">MailReply AI</span>
-        </Link>
-        <Button asChild variant="outline" size="sm">
-          <Link to="/">Back to App</Link>
-        </Button>
-      </header>
-
+    <Shell>
       <main className="mx-auto max-w-3xl px-6 pb-24 pt-10">
         {/* Intro */}
         <div className="mb-16 text-center">
@@ -153,6 +136,6 @@ function GuidePage() {
           </Button>
         </div>
       </main>
-    </div>
+    </Shell>
   );
 }

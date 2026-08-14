@@ -2,12 +2,23 @@ import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
 function createSupabaseClient() {
-  const SUPABASE_URL =
-    (import.meta as unknown as { env: Record<string, string> }).env['VITE_SUPABASE_URL'] ||
-    process.env['SUPABASE_URL'];
-  const SUPABASE_PUBLISHABLE_KEY =
-    (import.meta as unknown as { env: Record<string, string> }).env['VITE_SUPABASE_PUBLISHABLE_KEY'] ||
-    process.env['SUPABASE_PUBLISHABLE_KEY'];
+  let SUPABASE_URL: string | undefined = undefined;
+  let SUPABASE_PUBLISHABLE_KEY: string | undefined = undefined;
+
+  try {
+    // Vite statically replaces these exact string literals at build time
+    SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+    SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+  } catch (e) {
+    // import.meta.env might be undefined on the server, which is fine
+  }
+
+  if (!SUPABASE_URL && typeof process !== 'undefined' && process.env) {
+    SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+  }
+  if (!SUPABASE_PUBLISHABLE_KEY && typeof process !== 'undefined' && process.env) {
+    SUPABASE_PUBLISHABLE_KEY = process.env.SUPABASE_PUBLISHABLE_KEY || process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+  }
 
   if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
     const missing = [

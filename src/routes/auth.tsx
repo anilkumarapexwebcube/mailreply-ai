@@ -157,6 +157,14 @@ function AuthPage() {
               {busy && <Loader2 className="mr-2 size-4 animate-spin" />}
               {mode === "signin" ? "Sign in" : "Create account"}
             </Button>
+            {mode === "signup" && (
+              <p className="text-center text-xs text-muted-foreground mt-4">
+                By creating an account, you agree to our{" "}
+                <Link to="/terms" className="underline hover:text-foreground">Terms of Service</Link>{" "}
+                and{" "}
+                <Link to="/privacy-policy" className="underline hover:text-foreground">Privacy Policy</Link>.
+              </p>
+            )}
           </form>
 
           <button

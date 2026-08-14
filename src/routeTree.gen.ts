@@ -10,8 +10,11 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as GuideRouteImport } from './routes/guide'
+import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
+import { Route as TermsRouteImport } from './routes/terms'
 import { Route as ApiPublicDownloadExtensionRouteImport } from './routes/api/public/download-extension'
 import { Route as OauthGoogleMailReturnRouteImport } from './routes/oauth.google-mail.return'
 import { Route as ApiPublicExtensionGenerateReplyRouteImport } from './routes/api/public/extension/generate-reply'
@@ -22,6 +25,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AboutRoute = AboutRouteImport.update({
+  id: '/about',
+  path: '/about',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
@@ -30,6 +38,16 @@ const AuthRoute = AuthRouteImport.update({
 const GuideRoute = GuideRouteImport.update({
   id: '/guide',
   path: '/guide',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyPolicyRoute = PrivacyPolicyRouteImport.update({
+  id: '/privacy-policy',
+  path: '/privacy-policy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicDownloadExtensionRoute =
@@ -58,8 +76,11 @@ const ApiPublicExtensionStatusRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
   '/guide': typeof GuideRoute
+  '/privacy-policy': typeof PrivacyPolicyRoute
+  '/terms': typeof TermsRoute
   '/api/public/download-extension': typeof ApiPublicDownloadExtensionRoute
   '/oauth/google-mail/return': typeof OauthGoogleMailReturnRoute
   '/api/public/extension/generate-reply': typeof ApiPublicExtensionGenerateReplyRoute
@@ -67,8 +88,11 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
   '/guide': typeof GuideRoute
+  '/privacy-policy': typeof PrivacyPolicyRoute
+  '/terms': typeof TermsRoute
   '/api/public/download-extension': typeof ApiPublicDownloadExtensionRoute
   '/oauth/google-mail/return': typeof OauthGoogleMailReturnRoute
   '/api/public/extension/generate-reply': typeof ApiPublicExtensionGenerateReplyRoute
@@ -77,8 +101,11 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
   '/guide': typeof GuideRoute
+  '/privacy-policy': typeof PrivacyPolicyRoute
+  '/terms': typeof TermsRoute
   '/api/public/download-extension': typeof ApiPublicDownloadExtensionRoute
   '/oauth/google-mail/return': typeof OauthGoogleMailReturnRoute
   '/api/public/extension/generate-reply': typeof ApiPublicExtensionGenerateReplyRoute
@@ -88,8 +115,11 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/about'
     | '/auth'
     | '/guide'
+    | '/privacy-policy'
+    | '/terms'
     | '/api/public/download-extension'
     | '/oauth/google-mail/return'
     | '/api/public/extension/generate-reply'
@@ -97,8 +127,11 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/about'
     | '/auth'
     | '/guide'
+    | '/privacy-policy'
+    | '/terms'
     | '/api/public/download-extension'
     | '/oauth/google-mail/return'
     | '/api/public/extension/generate-reply'
@@ -106,8 +139,11 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/about'
     | '/auth'
     | '/guide'
+    | '/privacy-policy'
+    | '/terms'
     | '/api/public/download-extension'
     | '/oauth/google-mail/return'
     | '/api/public/extension/generate-reply'
@@ -116,8 +152,11 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AboutRoute: typeof AboutRoute
   AuthRoute: typeof AuthRoute
   GuideRoute: typeof GuideRoute
+  PrivacyPolicyRoute: typeof PrivacyPolicyRoute
+  TermsRoute: typeof TermsRoute
   ApiPublicDownloadExtensionRoute: typeof ApiPublicDownloadExtensionRoute
   OauthGoogleMailReturnRoute: typeof OauthGoogleMailReturnRoute
   ApiPublicExtensionGenerateReplyRoute: typeof ApiPublicExtensionGenerateReplyRoute
@@ -133,6 +172,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/about': {
+      id: '/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof AboutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth': {
       id: '/auth'
       path: '/auth'
@@ -145,6 +191,20 @@ declare module '@tanstack/react-router' {
       path: '/guide'
       fullPath: '/guide'
       preLoaderRoute: typeof GuideRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy-policy': {
+      id: '/privacy-policy'
+      path: '/privacy-policy'
+      fullPath: '/privacy-policy'
+      preLoaderRoute: typeof PrivacyPolicyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/download-extension': {
@@ -180,8 +240,11 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AboutRoute: AboutRoute,
   AuthRoute: AuthRoute,
   GuideRoute: GuideRoute,
+  PrivacyPolicyRoute: PrivacyPolicyRoute,
+  TermsRoute: TermsRoute,
   ApiPublicDownloadExtensionRoute: ApiPublicDownloadExtensionRoute,
   OauthGoogleMailReturnRoute: OauthGoogleMailReturnRoute,
   ApiPublicExtensionGenerateReplyRoute: ApiPublicExtensionGenerateReplyRoute,

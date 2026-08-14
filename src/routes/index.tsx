@@ -29,6 +29,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import brandLogo from "@/assets/mailreply-logo.png";
+import { Shell } from "@/components/layout/Shell";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -63,32 +64,6 @@ function Home() {
   }
 
   return session ? <Dashboard /> : <Landing />;
-}
-
-function Shell({ children, right }: { children: React.ReactNode; right?: React.ReactNode }) {
-  return (
-    <div className="grain-bg min-h-screen">
-      <header className="mx-auto flex max-w-5xl items-center justify-between px-6 py-6">
-        <div className="flex items-center gap-2.5">
-          <img
-            src={brandLogo}
-            alt="MailReply AI logo"
-            width={36}
-            height={36}
-            className="size-9 rounded-xl"
-          />
-          <span className="font-display text-lg font-semibold">MailReply AI</span>
-        </div>
-        <div className="flex items-center gap-4">
-          <Link to="/guide" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-            Guide
-          </Link>
-          {right}
-        </div>
-      </header>
-      {children}
-    </div>
-  );
 }
 
 function Landing() {
@@ -296,7 +271,7 @@ function Dashboard() {
       />
 
       <Shell
-        right={
+        rightNav={
           <Button variant="ghost" size="sm" onClick={() => setSignOutOpen(true)}>
             <LogOut className="mr-1.5 size-4" /> Sign out
           </Button>
