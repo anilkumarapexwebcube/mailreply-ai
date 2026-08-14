@@ -32,6 +32,7 @@ export class ReplyError extends Error {
 
 export interface ReplyRequest {
   platform?: "gmail" | "whatsapp";
+  mode?: "reply" | "compose";
   conversation?: any; // ConversationContext from extension
   threadId?: string;
   subject?: string;
@@ -106,7 +107,15 @@ export async function generateReplyForUser(userId: string, input: ReplyRequest) 
     }
   }
 
-  // ── Compose mode: no thread available — generate a fresh email ──
+  // ── Compose mode fallback validation ──
+  if (!isWhatsApp && !thread && input.mode === "reply") {
+    throw new ReplyError(
+      "Could not find this email thread in your connected Gmail account. Are you logged into the correct Gmail account?",
+      404,
+      "thread_not_found"
+    );
+  }
+
   const isComposeMode = !isWhatsApp && !thread;
 
   const draft = await generateReply({

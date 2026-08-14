@@ -11,7 +11,11 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = join(__dirname, '..');
 const extDir = join(root, 'extension');
 const distDir = join(root, 'extension', 'dist');
-const API_BASE = 'https://mailreplyai.vercel.app';
+
+// Use VERCEL_URL if available (for preview deployments), otherwise fallback to production URL
+const API_BASE = process.env.VERCEL_URL 
+  ? `https://${process.env.VERCEL_URL}` 
+  : 'https://mailreplyai.vercel.app';
 
 // 1. Run Vite build for extension JS files
 console.log('Building extension scripts with Vite...');

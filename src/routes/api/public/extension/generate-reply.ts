@@ -15,6 +15,7 @@ function json(body: unknown, status = 200) {
 
 interface Payload {
   platform?: "gmail" | "whatsapp";
+  mode?: "reply" | "compose";
   threadId?: unknown;
   subject?: unknown;
   conversation?: unknown;
@@ -55,6 +56,7 @@ export const Route = createFileRoute("/api/public/extension/generate-reply")({
         try {
           const result = await generateReplyForUser(userId, {
             platform: typeof payload.platform === "string" ? payload.platform : "gmail",
+            mode: payload.mode,
             ...(payload.conversation ? { conversation: payload.conversation as any } : {}),
             ...(str(payload.threadId, 200) ? { threadId: str(payload.threadId, 200)! } : {}),
             ...(str(payload.subject, 500) ? { subject: str(payload.subject, 500)! } : {}),
