@@ -2,19 +2,22 @@
   "use strict";
 
   const TONES = [
-    ["professional", "Professional"],
-    ["friendly", "Friendly"],
-    ["concise", "Concise"],
-    ["formal", "Formal"],
-    ["warm", "Warm"],
-    ["assertive", "Assertive"],
-    ["apologetic", "Apologetic"],
+    { value: "professional", label: "Professional" },
+    { value: "friendly", label: "Friendly" },
+    { value: "concise", label: "Concise" },
+    { value: "formal", label: "Formal" },
+    { value: "warm", label: "Warm" },
+    { value: "assertive", label: "Assertive" },
+    { value: "apologetic", label: "Apologetic" },
   ];
   const LENGTHS = [
-    ["short", "Short"],
-    ["medium", "Medium"],
-    ["detailed", "Detailed"],
+    { value: "short", label: "Short" },
+    { value: "medium", label: "Medium" },
+    { value: "detailed", label: "Detailed" },
   ];
+
+  let selectedTone = TONES[0].value;
+  let selectedLength = LENGTHS[0].value;
 
   let panel = null;
   let lastDraft = "";
@@ -79,8 +82,22 @@
       .replace(/>/g, "&gt;");
   }
 
-  function options(list) {
-    return list.map(([value, label]) => `<option value="${value}">${label}</option>`).join("");
+  function renderCustomSelect(id, options, selectedValue) {
+    const selected = options.find((o) => o.value === selectedValue) || options[0];
+    const optionsHtml = options
+      .map(
+        (o) =>
+          `<div class="mrai-option ${o.value === selectedValue ? "mrai-selected" : ""}" data-value="${o.value}">${o.label}</div>`,
+      )
+      .join("");
+    return `
+      <div class="mrai-custom-select" id="${id}">
+        <div class="mrai-select-trigger"><span>${selected.label}</span></div>
+        <div class="mrai-select-menu" hidden>
+          ${optionsHtml}
+        </div>
+      </div>
+    `;
   }
 
   function openPanel() {
@@ -88,6 +105,10 @@
       panel.remove();
       panel = null;
     }
+    // Reset selections on open
+    selectedTone = TONES[0].value;
+    selectedLength = LENGTHS[0].value;
+
     panel = document.createElement("div");
     panel.className = "mrai-panel";
     panel.innerHTML = `
@@ -97,12 +118,12 @@
         <textarea id="mrai-instruction" placeholder="e.g. Accept the meeting but push it to Thursday morning"></textarea>
         <div class="mrai-row">
           <div>
-            <label class="mrai-label" for="mrai-tone">Tone</label>
-            <select id="mrai-tone">${options(TONES)}</select>
+            <label class="mrai-label">Tone</label>
+            ${renderCustomSelect("mrai-tone-select", TONES, selectedTone)}
           </div>
           <div>
-            <label class="mrai-label" for="mrai-length">Length</label>
-            <select id="mrai-length">${options(LENGTHS)}</select>
+            <label class="mrai-label">Length</label>
+            ${renderCustomSelect("mrai-length-select", LENGTHS, selectedLength)}
           </div>
         </div>
         <div class="mrai-actions">
@@ -125,13 +146,57 @@
       panel = null;
     });
 
+    // Custom select logic
+    const selects = panel.querySelectorAll(".mrai-custom-select");
+    selects.forEach((selectEl) => {
+      const trigger = selectEl.querySelector(".mrai-select-trigger");
+      const menu = selectEl.querySelector(".mrai-select-menu");
+      const triggerSpan = trigger.querySelector("span");
+      const options = selectEl.querySelectorAll(".mrai-option");
+      const isTone = selectEl.id === "mrai-tone-select";
+
+      trigger.addEventListener("click", (e) => {
+        e.stopPropagation();
+        // Close others
+        selects.forEach((s) => {
+          if (s !== selectEl) s.querySelector(".mrai-select-menu").hidden = true;
+        });
+        menu.hidden = !menu.hidden;
+        if (!menu.hidden) {
+          trigger.classList.add("mrai-active");
+        } else {
+          trigger.classList.remove("mrai-active");
+        }
+      });
+
+      options.forEach((opt) => {
+        opt.addEventListener("click", (e) => {
+          e.stopPropagation();
+          options.forEach((o) => o.classList.remove("mrai-selected"));
+          opt.classList.add("mrai-selected");
+          triggerSpan.textContent = opt.textContent;
+          if (isTone) selectedTone = opt.dataset.value;
+          else selectedLength = opt.dataset.value;
+          menu.hidden = true;
+          trigger.classList.remove("mrai-active");
+        });
+      });
+    });
+
+    document.addEventListener("click", () => {
+      if (panel) {
+        panel.querySelectorAll(".mrai-select-menu").forEach((m) => (m.hidden = true));
+        panel.querySelectorAll(".mrai-select-trigger").forEach((t) => t.classList.remove("mrai-active"));
+      }
+    });
+
     generateBtn.addEventListener("click", () => {
       const payload = {
         threadId: threadIdFromUrl(),
         subject: currentSubject(),
         instruction: panel.querySelector("#mrai-instruction").value,
-        tone: panel.querySelector("#mrai-tone").value,
-        length: panel.querySelector("#mrai-length").value,
+        tone: selectedTone,
+        length: selectedLength,
       };
       generateBtn.disabled = true;
       generateBtn.textContent = "Drafting…";

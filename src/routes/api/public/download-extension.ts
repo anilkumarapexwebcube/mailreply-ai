@@ -18,7 +18,7 @@ function u32le(n: number) {
 function crc32(buf: Buffer): number {
   const table = crc32Table();
   let crc = 0xffffffff;
-  for (const byte of buf) crc = (crc >>> 8) ^ table[(crc ^ byte) & 0xff];
+  for (const byte of buf) crc = (crc >>> 8) ^ (table[(crc ^ byte) & 0xff] as number);
   return (crc ^ 0xffffffff) >>> 0;
 }
 
@@ -173,7 +173,7 @@ export const Route = createFileRoute("/api/public/download-extension")({
 
         const zip = buildZip(files);
 
-        return new Response(zip, {
+        return new Response(zip as unknown as BodyInit, {
           status: 200,
           headers: {
             "content-type": "application/zip",

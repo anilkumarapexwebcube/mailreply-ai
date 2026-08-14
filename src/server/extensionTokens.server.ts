@@ -34,6 +34,19 @@ export async function createTokenForUser(userId: string, label: string) {
   return token;
 }
 
+export async function revokeTokensForUser(userId: string) {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { error } = await supabaseAdmin
+    .from("extension_tokens")
+    .update({ revoked: true })
+    .eq("user_id", userId)
+    .eq("revoked", false);
+  if (error) {
+    console.error("[extensionTokens] Failed to revoke tokens:", error);
+    throw new Error(`Failed to revoke tokens: ${error.message}`);
+  }
+}
+
 /** Resolves a raw extension token to its owner, or null when invalid/revoked. */
 export async function resolveToken(token: string): Promise<string | null> {
   if (!token || !token.startsWith("mr_")) {

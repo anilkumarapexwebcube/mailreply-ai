@@ -2,7 +2,6 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import {
-  
   Sparkles,
   ShieldCheck,
   Copy,
@@ -12,6 +11,8 @@ import {
   Unplug,
   LogOut,
   Download,
+  RefreshCw,
+  KeyRound,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -22,9 +23,11 @@ import {
   disconnectGmail,
   getGmailStatus,
   startGmailConnect,
+  revokeExtensionTokens,
 } from "@/lib/gmailConnection.functions";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import brandLogo from "@/assets/mailreply-logo.png";
 
 export const Route = createFileRoute("/")({
@@ -117,7 +120,6 @@ function Landing() {
             >
               How it works
             </Button>
-
           </div>
         </section>
 
@@ -155,8 +157,16 @@ function Landing() {
 
 function Dashboard() {
   const queryClient = useQueryClient();
-  const [token, setToken] = useState<string | null>(null);
+  const [token, setToken] = useState<string | null>(() => {
+    return typeof window !== "undefined" ? localStorage.getItem("mailreply_token") : null;
+  });
   const [copied, setCopied] = useState(false);
+
+  // Confirmation dialog state
+  const [signOutOpen, setSignOutOpen] = useState(false);
+  const [disconnectOpen, setDisconnectOpen] = useState(false);
+  const [reconnectOpen, setReconnectOpen] = useState(false);
+  const [regenerateKeyOpen, setRegenerateKeyOpen] = useState(false);
 
   const status = useQuery({
     queryKey: ["gmail-status"],
@@ -190,15 +200,28 @@ function Dashboard() {
       toast.success("Gmail disconnected");
       void queryClient.invalidateQueries({ queryKey: ["gmail-status"] });
     },
+    onError: () => toast.error("Failed to disconnect Gmail"),
   });
 
   const pair = useMutation({
     mutationFn: () => createExtensionToken({ data: { label: "Chrome extension" } }),
     onSuccess: (data) => {
       setToken(data.token);
+      localStorage.setItem("mailreply_token", data.token);
       setCopied(false);
     },
     onError: () => toast.error("Could not create a pairing key"),
+  });
+
+  const revoke = useMutation({
+    mutationFn: async () => {
+      await revokeExtensionTokens();
+      localStorage.removeItem("mailreply_token");
+      setToken(null);
+    },
+    onSuccess: () => {
+      toast.success("Pairing key revoked");
+    }
   });
 
   const connected = status.data?.connected ?? false;
@@ -220,96 +243,187 @@ function Dashboard() {
   };
 
   return (
-    <Shell
-      right={
-        <Button variant="ghost" size="sm" onClick={() => void supabase.auth.signOut()}>
-          <LogOut className="mr-1.5 size-4" /> Sign out
-        </Button>
-      }
-    >
-      <main className="mx-auto max-w-3xl space-y-4 px-6 pb-24">
-        <h1 className="pt-4 pb-2 text-3xl font-semibold">Setup</h1>
+    <>
+      {/* ── Sign out confirmation ── */}
+      <ConfirmDialog
+        open={signOutOpen}
+        onOpenChange={setSignOutOpen}
+        title="Sign out?"
+        description="You will be signed out of MailReply AI. Your Gmail connection and pairing key will remain saved — just sign back in to continue."
+        confirmLabel="Sign out"
+        cancelLabel="Stay signed in"
+        variant="warning"
+        icon={LogOut}
+        onConfirm={() => void supabase.auth.signOut()}
+      />
 
-        <section className="surface p-6">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <h2 className="text-lg font-semibold">1. Gmail access</h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {status.isLoading
-                  ? "Checking…"
-                  : connected
-                    ? `Connected as ${status.data?.email ?? "your Google account"}.`
-                    : "Authorise Google so the assistant can read the thread you have open."}
-              </p>
-            </div>
-            {connected ? (
-              <Badge className="bg-success text-success-foreground">Connected</Badge>
-            ) : (
-              <Badge variant="secondary">Not connected</Badge>
-            )}
-          </div>
-          <div className="mt-5 flex flex-wrap gap-2">
-            <Button onClick={() => connect.mutate()} disabled={connect.isPending}>
-              {connect.isPending && <Loader2 className="mr-2 size-4 animate-spin" />}
-              <Plug className="mr-1.5 size-4" />
-              {connected ? "Reconnect Gmail" : "Connect Gmail"}
-            </Button>
-            {connected && (
-              <Button variant="outline" onClick={() => unlink.mutate()} disabled={unlink.isPending}>
-                <Unplug className="mr-1.5 size-4" /> Disconnect
-              </Button>
-            )}
-          </div>
-        </section>
+      {/* ── Disconnect Gmail confirmation ── */}
+      <ConfirmDialog
+        open={disconnectOpen}
+        onOpenChange={setDisconnectOpen}
+        title="Disconnect Gmail?"
+        description="This will revoke MailReply AI's access to your Gmail account. The Chrome extension will stop working until you reconnect. Your account and pairing key are not affected."
+        confirmLabel="Yes, disconnect"
+        cancelLabel="Keep connected"
+        variant="danger"
+        icon={Unplug}
+        onConfirm={() => unlink.mutate()}
+      />
 
-        <section className="surface p-6">
-          <h2 className="text-lg font-semibold">2. Pairing key</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Generate a key and paste it into the extension popup. Creating a new key replaces the
-            previous one.
-          </p>
-          <div className="mt-5 flex flex-wrap items-center gap-2">
-            <Button variant="outline" onClick={() => pair.mutate()} disabled={pair.isPending}>
-              {pair.isPending && <Loader2 className="mr-2 size-4 animate-spin" />}
-              Generate pairing key
-            </Button>
-            {token && (
-              <Button
-                variant="ghost"
-                onClick={() => {
-                  void navigator.clipboard.writeText(token);
-                  setCopied(true);
-                  toast.success("Copied");
-                }}
-              >
-                {copied ? <Check className="mr-1.5 size-4" /> : <Copy className="mr-1.5 size-4" />}
-                Copy
-              </Button>
-            )}
-          </div>
-          {token && (
-            <code className="mt-4 block overflow-x-auto rounded-lg bg-muted px-4 py-3 font-mono text-xs">
-              {token}
-            </code>
-          )}
-        </section>
+      {/* ── Reconnect Gmail confirmation ── */}
+      <ConfirmDialog
+        open={reconnectOpen}
+        onOpenChange={setReconnectOpen}
+        title="Reconnect Gmail?"
+        description="This will start a new Google authorisation and replace the existing connection. You may need to grant permissions again."
+        confirmLabel="Reconnect"
+        cancelLabel="Cancel"
+        variant="warning"
+        icon={RefreshCw}
+        onConfirm={() => connect.mutate()}
+      />
 
-        <section className="surface p-6">
-          <h2 className="text-lg font-semibold">3. Install the extension</h2>
-          <ol className="mt-3 space-y-1.5 text-sm text-muted-foreground">
-            <li>1. Download and unzip the extension folder.</li>
-            <li>
-              2. Open <code className="font-mono">chrome://extensions</code> and enable Developer
-              mode.
-            </li>
-            <li>3. Choose “Load unpacked” and select the unzipped folder.</li>
-            <li>4. Open the extension popup, paste your pairing key, and reload Gmail.</li>
-          </ol>
-          <Button className="mt-5" variant="outline" onClick={downloadExtension}>
-            <Download className="mr-1.5 size-4" /> Download extension
+      {/* ── Regenerate pairing key confirmation ── */}
+      <ConfirmDialog
+        open={regenerateKeyOpen}
+        onOpenChange={setRegenerateKeyOpen}
+        title="Generate a new pairing key?"
+        description="Creating a new key will immediately invalidate the previous one. You will need to paste the new key into the Chrome extension popup to keep using MailReply AI."
+        confirmLabel="Generate new key"
+        cancelLabel="Cancel"
+        variant="warning"
+        icon={KeyRound}
+        onConfirm={() => pair.mutate()}
+      />
+
+      <Shell
+        right={
+          <Button variant="ghost" size="sm" onClick={() => setSignOutOpen(true)}>
+            <LogOut className="mr-1.5 size-4" /> Sign out
           </Button>
-        </section>
-      </main>
-    </Shell>
+        }
+      >
+        <main className="mx-auto max-w-3xl space-y-4 px-6 pb-24">
+          <h1 className="pt-4 pb-2 text-3xl font-semibold">Setup</h1>
+
+          {/* Gmail access */}
+          <section className="surface p-6">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h2 className="text-lg font-semibold">1. Gmail access</h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {status.isLoading
+                    ? "Checking…"
+                    : connected
+                      ? `Connected as ${status.data?.email ?? "your Google account"}.`
+                      : "Authorise Google so the assistant can read the thread you have open."}
+                </p>
+              </div>
+              {connected ? (
+                <Badge className="bg-success text-success-foreground shrink-0">Connected</Badge>
+              ) : (
+                <Badge variant="secondary" className="shrink-0">Not connected</Badge>
+              )}
+            </div>
+            <div className="mt-5 flex flex-wrap gap-2">
+              {/* First connect: no confirmation needed. Reconnect: show warning */}
+              <Button
+                onClick={() => {
+                  if (connected) {
+                    setReconnectOpen(true);
+                  } else {
+                    connect.mutate();
+                  }
+                }}
+                disabled={connect.isPending}
+              >
+                {connect.isPending && <Loader2 className="mr-2 size-4 animate-spin" />}
+                <Plug className="mr-1.5 size-4" />
+                {connected ? "Reconnect Gmail" : "Connect Gmail"}
+              </Button>
+              {connected && (
+                <Button
+                  variant="outline"
+                  onClick={() => setDisconnectOpen(true)}
+                  disabled={unlink.isPending}
+                >
+                  {unlink.isPending
+                    ? <Loader2 className="mr-1.5 size-4 animate-spin" />
+                    : <Unplug className="mr-1.5 size-4" />
+                  }
+                  Disconnect
+                </Button>
+              )}
+            </div>
+          </section>
+
+          {/* Pairing key */}
+          <section className="surface p-6">
+            <h2 className="text-lg font-semibold">2. Pairing key</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Generate a key and paste it into the extension popup. Creating a new key replaces the
+              previous one.
+            </p>
+            <div className="mt-5 flex flex-wrap items-center gap-2">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  // If a key already exists in this session, warn before replacing
+                  if (token) {
+                    setRegenerateKeyOpen(true);
+                  } else {
+                    pair.mutate();
+                  }
+                }}
+                disabled={pair.isPending}
+              >
+                {pair.isPending && <Loader2 className="mr-2 size-4 animate-spin" />}
+                {token ? "Regenerate pairing key" : "Generate pairing key"}
+              </Button>
+              {token && (
+              <>
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    void navigator.clipboard.writeText(token);
+                    setCopied(true);
+                    toast.success("Copied to clipboard");
+                  }}
+                >
+                  {copied ? <Check className="mr-1.5 size-4" /> : <Copy className="mr-1.5 size-4" />}
+                  {copied ? "Copied!" : "Copy"}
+                </Button>
+                <Button variant="ghost" className="text-destructive hover:bg-destructive/10 hover:text-destructive" onClick={() => revoke.mutate()}>
+                  Revoke
+                </Button>
+              </>
+            )}
+            </div>
+            {token && (
+              <code className="mt-4 block overflow-x-auto rounded-lg bg-muted px-4 py-3 font-mono text-xs">
+                {token}
+              </code>
+            )}
+          </section>
+
+          {/* Install extension */}
+          <section className="surface p-6">
+            <h2 className="text-lg font-semibold">3. Install the extension</h2>
+            <ol className="mt-3 space-y-1.5 text-sm text-muted-foreground">
+              <li>1. Download and unzip the extension folder.</li>
+              <li>
+                2. Open <code className="font-mono">chrome://extensions</code> and enable Developer
+                mode.
+              </li>
+              <li>3. Choose "Load unpacked" and select the unzipped folder.</li>
+              <li>4. Open the extension popup, paste your pairing key, and reload Gmail.</li>
+            </ol>
+            <Button className="mt-5" variant="outline" onClick={downloadExtension}>
+              <Download className="mr-1.5 size-4" /> Download extension
+            </Button>
+          </section>
+        </main>
+      </Shell>
+    </>
   );
 }

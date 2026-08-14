@@ -45,27 +45,14 @@ function AuthPage() {
     setBusy(true);
     try {
       if (mode === "signup") {
-        // Fallback to production URL in case window.location.origin is not set correctly
-        const redirectTo =
-          window.location.origin && window.location.origin !== "null"
-            ? window.location.origin
-            : "https://mailreplyai.vercel.app";
-        const { data: signUpData, error } = await supabase.auth.signUp({
+        const { error } = await supabase.auth.signUp({
           email,
           password,
           options: {
-            emailRedirectTo: redirectTo,
             data: { full_name: name },
           },
         });
         if (error) throw error;
-        // If identities is empty, email confirmation is required
-        const needsConfirmation =
-          !signUpData.session && signUpData.user?.identities?.length === 0;
-        if (needsConfirmation) {
-          toast.success("Account created! Please check your email to confirm your account.");
-          return;
-        }
         toast.success("Account created. You're signed in.");
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -80,8 +67,12 @@ function AuthPage() {
 
   const google = async () => {
     setBusy(true);
+    const redirectTo =
+      window.location.origin && window.location.origin !== "null"
+        ? window.location.origin
+        : "https://mailreplyai.vercel.app";
     const result = await authIntegration.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
+      redirect_uri: redirectTo,
     });
     if (result.error) {
       toast.error("Google sign-in failed");
@@ -179,6 +170,21 @@ function AuthPage() {
           </button>
         </div>
       </div>
+
+      {/* Attractive Full-Screen Loading Overlay */}
+      {busy && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm transition-all duration-300 animate-in fade-in">
+          <div className="flex flex-col items-center gap-4">
+            <div className="relative flex size-16 items-center justify-center rounded-2xl bg-primary shadow-xl shadow-primary/20">
+              <Loader2 className="size-8 animate-spin text-primary-foreground" />
+              <div className="absolute inset-0 rounded-2xl ring-2 ring-primary ring-offset-2 ring-offset-background animate-pulse" />
+            </div>
+            <p className="text-sm font-medium text-foreground animate-pulse">
+              {mode === "signin" ? "Signing you in..." : "Setting up your account..."}
+            </p>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

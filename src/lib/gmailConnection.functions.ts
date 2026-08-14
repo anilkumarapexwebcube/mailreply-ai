@@ -47,6 +47,14 @@ export const createExtensionToken = createServerFn({ method: "POST" })
     return { token };
   });
 
+export const revokeExtensionTokens = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { revokeTokensForUser } = await import("@/server/extensionTokens.server");
+    await revokeTokensForUser(context.userId);
+    return { success: true };
+  });
+
 export const generateReplyForThread = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator(

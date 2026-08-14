@@ -16,7 +16,7 @@ export const authIntegration = {
         provider: "google",
         options: {
           redirectTo: opts?.redirect_uri ?? window.location.origin,
-          queryParams: opts?.extraParams,
+          ...(opts?.extraParams ? { queryParams: opts.extraParams } : {}),
         },
       });
 
