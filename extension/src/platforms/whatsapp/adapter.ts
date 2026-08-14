@@ -183,49 +183,35 @@ export class WhatsAppAdapter implements ConversationPlatform {
   }
 
   private mountReplyButton() {
-    // Don't mount if already present
     if (document.querySelector(".mrai-wa-btn")) return;
 
-    // ── STRATEGY 1: Right side of compose area (next to send/voice button) ──
-    // Try to find the send/mic button's parent wrapper to inject beside it
-    const sendBtn =
-      document.querySelector('[data-testid="send"]') ||
-      document.querySelector('[data-testid="voice-message-btn"]') ||
-      document.querySelector('[aria-label="Send"]');
-
-    if (sendBtn?.parentElement) {
-      this.injectButton(sendBtn.parentElement, "beside-send");
+    // STRATEGY 1: Inject right next to the text input box
+    const composeInput = document.querySelector('[data-testid="conversation-compose-box-input"]') ||
+                         document.querySelector('footer div[contenteditable="true"]');
+    
+    if (composeInput?.parentElement) {
+      this.injectButton(composeInput.parentElement, "beside-input");
       return;
     }
 
-    // ── STRATEGY 2: Inject at the end of the footer ──
-    const composeFooter = findComposeFooter();
-    if (composeFooter) {
-      this.injectButton(composeFooter as HTMLElement, "footer-end");
+    // STRATEGY 2: Fallback to the compose box container
+    const composeBox = document.querySelector('[data-testid="conversation-compose-box"]');
+    if (composeBox) {
+      this.injectButton(composeBox as HTMLElement, "compose-box");
       return;
     }
 
-    // ── STRATEGY 3: Inject into the chat header ──
+    // STRATEGY 3: Inject into the chat header (last resort)
     const main = document.querySelector("div#main");
-    if (!main) {
-      console.log("[MailReply AI] div#main not found");
-      return;
+    const header = main?.querySelector("header");
+    if (header) {
+      const actionContainer = header.querySelector('[data-testid="conversation-header-actions"]') || header;
+      this.injectButton(actionContainer as HTMLElement, "header");
     }
-    const header = main.querySelector("header");
-    if (!header) {
-      console.log("[MailReply AI] header not found in div#main");
-      return;
-    }
-    const actionContainer =
-      header.querySelector('[data-testid="conversation-header-actions"]') ||
-      header;
-    this.injectButton(actionContainer as HTMLElement, "header");
   }
 
   private injectButton(container: HTMLElement, strategy: string) {
     if (document.querySelector(".mrai-wa-btn")) return;
-
-    console.log(`[MailReply AI] Injecting button via strategy: ${strategy}`);
 
     const button = document.createElement("button");
     button.type = "button";
@@ -234,12 +220,11 @@ export class WhatsAppAdapter implements ConversationPlatform {
     button.title = "Generate a reply based on the conversation";
     button.innerHTML = `<span style="font-size:13px">✦</span>&nbsp;AI Reply`;
 
-    // Revert to WhatsApp green and adjust margin
     Object.assign(button.style, {
       display: "inline-flex",
       alignItems: "center",
       gap: "4px",
-      margin: "0 12px 0 6px", // Shift 12px from the right
+      margin: "0 8px 0 8px", // Clean margins so it doesn't touch other elements
       padding: "6px 14px",
       borderRadius: "999px",
       border: "none",
@@ -265,19 +250,10 @@ export class WhatsAppAdapter implements ConversationPlatform {
       this.openPanel();
     });
 
-    // For beside-send: insert before send button (to its left)
-    if (strategy === "beside-send") {
-      const sendEl =
-        container.querySelector('[data-testid="send"]') ||
-        container.querySelector('[data-testid="voice-message-btn"]') ||
-        container.querySelector('[aria-label="Send"]') ||
-        container.lastElementChild;
-      if (sendEl) {
-        container.insertBefore(button, sendEl);
-      } else {
-        container.appendChild(button);
-      }
-    } else if (strategy === "footer-end") {
+    if (strategy === "beside-input") {
+      // Place it exactly after the text input box, before the send/mic icons
+      container.after(button);
+    } else if (strategy === "compose-box") {
       container.appendChild(button);
     } else {
       container.prepend(button);
