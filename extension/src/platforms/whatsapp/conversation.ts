@@ -2,80 +2,92 @@ import type { ConversationContext, ConversationMessage, Participant, ChatIdentit
 
 /**
  * Extracts visible messages from the active WhatsApp Web chat DOM.
- * WhatsApp messages are usually contained in a structure like:
- * div.message-in (incoming) or div.message-out (outgoing)
+ * Uses stable data-testid and attribute selectors instead of obfuscated CSS classes.
  */
 function extractVisibleMessages(): ConversationMessage[] {
-  const main = document.querySelector("div#main");
-  if (!main) return [];
-
-  // Find the message container. This might change if WhatsApp updates UI.
-  // Usually, messages are within rows inside #main
-  const messageRows = Array.from(main.querySelectorAll('div[role="row"]'));
   const messages: ConversationMessage[] = [];
 
-  for (const row of messageRows) {
-    const incomingEl = row.querySelector(".message-in");
-    const outgoingEl = row.querySelector(".message-out");
-    const msgEl = incomingEl || outgoingEl;
+  // Primary: each message row has data-testid="msg-container" or is a listitem
+  // WhatsApp wraps each bubble in a div with role="row" inside a role="list"
+  const messageList =
+    document.querySelector('[data-testid="conversation-panel-messages"]') ||
+    document.querySelector('[role="application"]') ||
+    document.querySelector("div#main");
 
-    if (!msgEl) continue;
+  if (!messageList) return [];
 
-    // Detect direction
-    const direction = incomingEl ? "incoming" : "outgoing";
+  // Get all message rows — these are divs with role="row"
+  const rows = Array.from(messageList.querySelectorAll('div[role="row"]'));
 
-    // Extract text
-    // WhatsApp usually stores text in a span with dir="ltr" inside a copyable-text element
-    const copyableText = msgEl.querySelector('div.copyable-text[data-pre-plain-text]');
-    const timestampStr = copyableText ? copyableText.getAttribute("data-pre-plain-text") : "";
+  for (const row of rows) {
+    // Each row contains ONE message bubble.
+    // Incoming messages have data-testid="msg-container" with no "message-out" indicator.
+    // The most reliable signal is the copyable-text attribute.
+    const copyableEl = row.querySelector('[data-testid="copyable-text"]') as HTMLElement | null;
     
-    // The actual visible text span
-    const textSpan = msgEl.querySelector('span.selectable-text[dir="ltr"]');
-    if (!textSpan) {
-      // If it's a media message without text, we handle it as [Media]
-      const isImage = msgEl.querySelector('img[src^="blob:"]');
-      if (isImage) {
-        messages.push({
-          id: `msg_${messages.length}`,
-          direction,
-          text: "[Image Attached]",
-          timestamp: timestampStr || undefined,
-        });
-      }
-      continue;
+    // Get message direction from focusable-list-item context
+    // Outgoing messages typically have a checkmark/tick icon
+    const hasTick = Boolean(
+      row.querySelector('[data-testid="msg-dbl-check"]') ||
+      row.querySelector('[data-testid="msg-check"]') ||
+      row.querySelector('[data-testid="msg-time"]')
+    );
+    
+    // Best heuristic: if the bubble is aligned right it's outgoing.
+    // We check for outgoing by looking at message-out class OR data-id containing "true" for fromMe
+    const bubbleEl = row.querySelector('[class*="message-out"]') || 
+                     row.querySelector('[data-testid*="out"]');
+    const direction: "incoming" | "outgoing" = bubbleEl ? "outgoing" : "incoming";
+    
+    // Extract the text content
+    let text = "";
+    let timestamp = "";
+    
+    if (copyableEl) {
+      // data-pre-plain-text has "[HH:MM, DD/MM/YYYY] ContactName: " format
+      const prePlainText = copyableEl.getAttribute("data-pre-plain-text") || "";
+      timestamp = prePlainText.match(/\[([^\]]+)\]/)?.[1] || "";
+      
+      // Get the actual message text — it's in a span inside copyable-text
+      const textSpan = copyableEl.querySelector("span.selectable-text") ||
+                       copyableEl.querySelector("span") ||
+                       copyableEl;
+      text = (textSpan as HTMLElement)?.innerText?.trim() || "";
+    } else {
+      // Fallback: look for any text span in the row
+      const textEl = row.querySelector("span.selectable-text") || 
+                     row.querySelector('span[dir="ltr"]') ||
+                     row.querySelector('span[dir="auto"]');
+      text = (textEl as HTMLElement)?.innerText?.trim() || "";
     }
 
-    const text = textSpan.textContent || "";
-    
-    // Check if it's quoting another message
-    const isQuoted = Boolean(msgEl.querySelector('span[data-testid="quoted-message"]'));
+    if (!text) continue;
 
-    // Try to find sender name for group chats (usually in a span with dir="auto" at the top of the message bubble)
-    let senderName: string | undefined = undefined;
-    if (direction === "incoming") {
-      const senderEl = msgEl.querySelector('div > span[dir="auto"]._ao3e'); // Very fragile, but fallback exists
-      if (senderEl && senderEl.textContent) {
-        senderName = senderEl.textContent;
-      }
+    // Extract sender name for group chats
+    let senderName: string | undefined;
+    const senderEl = row.querySelector('[data-testid="author"]') ||
+                     row.querySelector("span._ao3e");
+    if (senderEl?.textContent?.trim()) {
+      senderName = senderEl.textContent.trim();
     }
 
-    const sender: Participant | undefined = senderName ? { displayName: senderName, type: "contact" } : undefined;
+    const sender: Participant | undefined = senderName
+      ? { displayName: senderName, type: "contact" }
+      : undefined;
 
     messages.push({
       id: `msg_${messages.length}`,
       text,
       direction,
-      isQuoted,
+      isQuoted: Boolean(row.querySelector('[data-testid="quoted-message"]')),
       sender,
-      timestamp: timestampStr || undefined,
+      timestamp: timestamp || undefined,
     });
   }
 
-  // Deduplicate: Only remove messages that are completely identical (same text + same timestamp).
-  // Messages with identical text but different timestamps (e.g. "Ok", "Yes") must be kept.
+  // Deduplicate: same direction + same timestamp + same text = duplicate DOM node
   const seen = new Set<string>();
   return messages.filter((msg) => {
-    // Use timestamp as part of dedup key so same text at diff times is preserved
     const key = `${msg.direction}||${msg.timestamp || msg.id}||${msg.text}`;
     if (seen.has(key)) return false;
     seen.add(key);
@@ -85,8 +97,12 @@ function extractVisibleMessages(): ConversationMessage[] {
 
 export async function getConversation(identity: ChatIdentity): Promise<ConversationContext> {
   const messages = extractVisibleMessages();
-  
-  // Try to find the participant name from the identity
+
+  console.log(`[MailReply AI] Extracted ${messages.length} messages from chat`);
+  if (messages.length > 0) {
+    console.log("[MailReply AI] Last message:", messages[messages.length - 1]);
+  }
+
   const participants: Participant[] = [{
     displayName: identity.title,
     type: "contact"
@@ -102,6 +118,6 @@ export async function getConversation(identity: ChatIdentity): Promise<Conversat
     messages,
     latestMessage,
     visibleMessageCount: messages.length,
-    completeness: "available-context", // We don't read the full history, just what's loaded
+    completeness: "available-context",
   };
 }

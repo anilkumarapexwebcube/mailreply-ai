@@ -186,48 +186,43 @@ export class WhatsAppAdapter implements ConversationPlatform {
     // Don't mount if already present
     if (document.querySelector(".mrai-wa-btn")) return;
 
-    // ── STRATEGY 1: Inject next to the compose box (like Grammarly does) ──
-    const composeFooter = findComposeFooter();
-    if (composeFooter) {
-      // Look for the send button wrapper to inject next to
-      const sendBtn =
-        composeFooter.querySelector('[data-testid="send"]') ||
-        composeFooter.querySelector('[aria-label="Send"]') ||
-        composeFooter.querySelector('button[class*="send"]');
+    // ── STRATEGY 1: Right side of compose area (next to send/voice button) ──
+    // Try to find the send/mic button's parent wrapper to inject beside it
+    const sendBtn =
+      document.querySelector('[data-testid="send"]') ||
+      document.querySelector('[data-testid="voice-message-btn"]') ||
+      document.querySelector('[aria-label="Send"]');
 
-      if (sendBtn?.parentElement) {
-        this.injectButton(sendBtn.parentElement, "beforebegin-send");
-        return;
-      }
-
-      // Fallback: inject at the start of the footer
-      this.injectButton(composeFooter as HTMLElement, "footer-prepend");
+    if (sendBtn?.parentElement) {
+      this.injectButton(sendBtn.parentElement, "beside-send");
       return;
     }
 
-    // ── STRATEGY 2: Inject into the chat header (original approach) ──
+    // ── STRATEGY 2: Inject at the end of the footer ──
+    const composeFooter = findComposeFooter();
+    if (composeFooter) {
+      this.injectButton(composeFooter as HTMLElement, "footer-end");
+      return;
+    }
+
+    // ── STRATEGY 3: Inject into the chat header ──
     const main = document.querySelector("div#main");
     if (!main) {
       console.log("[MailReply AI] div#main not found");
       return;
     }
-
     const header = main.querySelector("header");
     if (!header) {
       console.log("[MailReply AI] header not found in div#main");
       return;
     }
-
     const actionContainer =
       header.querySelector('[data-testid="conversation-header-actions"]') ||
-      header.querySelector('[data-testid="chat-header"]') ||
       header;
-
     this.injectButton(actionContainer as HTMLElement, "header");
   }
 
   private injectButton(container: HTMLElement, strategy: string) {
-    // Double-check not already mounted
     if (document.querySelector(".mrai-wa-btn")) return;
 
     console.log(`[MailReply AI] Injecting button via strategy: ${strategy}`);
@@ -237,20 +232,18 @@ export class WhatsAppAdapter implements ConversationPlatform {
     button.className = "mrai-btn mrai-wa-btn";
     button.setAttribute("aria-label", "Generate AI reply with MailReply AI");
     button.title = "Generate a reply based on the conversation";
+    button.innerHTML = `<span style="font-size:13px">✦</span>&nbsp;AI Reply`;
 
-    // Use innerHTML for the spark icon + text
-    button.innerHTML = `<span style="font-size:14px">✦</span> AI Reply`;
-
-    // Inline styles — safe against WhatsApp CSS resets, visible in both themes
+    // Revert to WhatsApp green and adjust margin
     Object.assign(button.style, {
       display: "inline-flex",
       alignItems: "center",
-      gap: "5px",
-      margin: "0 6px",
-      padding: "5px 13px",
-      borderRadius: "20px",
+      gap: "4px",
+      margin: "0 12px 0 6px", // Shift 12px from the right
+      padding: "6px 14px",
+      borderRadius: "999px",
       border: "none",
-      background: "#25D366",
+      background: "#25D366", // WhatsApp Green
       color: "white",
       fontSize: "13px",
       fontWeight: "600",
@@ -261,25 +254,31 @@ export class WhatsAppAdapter implements ConversationPlatform {
       lineHeight: "1",
       whiteSpace: "nowrap",
       outline: "none",
-      boxShadow: "0 1px 4px rgba(0,0,0,0.2)",
+      boxShadow: "0 1px 3px rgba(0,0,0,0.25)",
     });
 
-    button.addEventListener("mouseenter", () => {
-      button.style.background = "#1da851";
-    });
-    button.addEventListener("mouseleave", () => {
-      button.style.background = "#25D366";
-    });
-
+    button.addEventListener("mouseenter", () => { button.style.background = "#1da851"; });
+    button.addEventListener("mouseleave", () => { button.style.background = "#25D366"; });
     button.addEventListener("click", (e) => {
       e.preventDefault();
       e.stopPropagation();
       this.openPanel();
     });
 
-    if (strategy === "beforebegin-send") {
-      // Insert before the send button (same level)
-      container.insertAdjacentElement("beforebegin", button);
+    // For beside-send: insert before send button (to its left)
+    if (strategy === "beside-send") {
+      const sendEl =
+        container.querySelector('[data-testid="send"]') ||
+        container.querySelector('[data-testid="voice-message-btn"]') ||
+        container.querySelector('[aria-label="Send"]') ||
+        container.lastElementChild;
+      if (sendEl) {
+        container.insertBefore(button, sendEl);
+      } else {
+        container.appendChild(button);
+      }
+    } else if (strategy === "footer-end") {
+      container.appendChild(button);
     } else {
       container.prepend(button);
     }

@@ -51,7 +51,7 @@ function buildPrompts(args: GenerateReplyArgs): { system: string; prompt: string
   const isWhatsApp = args.platform === "whatsapp";
 
   // ── WhatsApp Mode ──
-  if (isWhatsApp && args.conversation) {
+  if (isWhatsApp) {
     const system = [
       "You are an expert AI assistant integrated into WhatsApp Web. You draft natural, conversational, and concise replies.",
       "Rules:",
@@ -62,9 +62,13 @@ function buildPrompts(args: GenerateReplyArgs): { system: string; prompt: string
       `Tone: ${args.tone}. Length: ${LENGTH_GUIDE[args.length]}`,
     ].join("\n");
 
-    const formattedMessages = args.conversation.messages.map((m: any) => 
-      `${m.sender?.displayName || (m.direction === "outgoing" ? "You" : "Contact")}: ${m.text}`
-    ).join("\n\n");
+    // Format messages if conversation exists, otherwise use a placeholder
+    let formattedMessages = "No previous messages detected.";
+    if (args.conversation && args.conversation.messages && args.conversation.messages.length > 0) {
+      formattedMessages = args.conversation.messages.map((m: any) => 
+        `${m.sender?.displayName || (m.direction === "outgoing" ? "You" : "Contact")}: ${m.text}`
+      ).join("\n\n");
+    }
 
     const prompt = [
       "CONVERSATION (oldest to newest):",
