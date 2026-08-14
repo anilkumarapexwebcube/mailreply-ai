@@ -61,12 +61,16 @@ export class WhatsAppAdapter implements ConversationPlatform {
   }
 
   public init() {
+    console.log("[MailReply AI] Initializing WhatsApp adapter...");
     // Use a debounced observer to avoid performance issues on frequent DOM mutations
     this.observer = new MutationObserver(this.debouncedHandleChanges);
     this.observer.observe(document.body, { childList: true, subtree: true });
 
     // Initial check after page is settled
-    setTimeout(() => this.handleDOMChanges(), 2500);
+    setTimeout(() => {
+      console.log("[MailReply AI] Running initial DOM check...");
+      this.handleDOMChanges();
+    }, 2500);
   }
 
   private async handleDOMChanges() {
@@ -74,16 +78,15 @@ export class WhatsAppAdapter implements ConversationPlatform {
 
     if (detection.active && detection.identity) {
       if (this.currentChatKey !== detection.identity.key) {
-        // Chat switched — cancel any running generation and remove old button
+        console.log(`[MailReply AI] New WhatsApp chat detected: ${detection.identity.title}`);
         this.currentChatKey = detection.identity.key;
         this.activeGenerationId = null;
-        // Remove any stale button from old chat header (will get remounted)
         document.querySelectorAll(".mrai-wa-btn").forEach((el) => el.remove());
       }
       this.mountReplyButton();
     } else {
       if (this.currentChatKey !== null) {
-        // Chat closed — clean up
+        console.log("[MailReply AI] Chat closed or inactive.");
         this.currentChatKey = null;
         this.activeGenerationId = null;
         document.querySelectorAll(".mrai-wa-btn").forEach((el) => el.remove());
@@ -172,18 +175,28 @@ export class WhatsAppAdapter implements ConversationPlatform {
 
   private mountReplyButton() {
     const main = document.querySelector("div#main");
-    if (!main) return;
+    if (!main) {
+      console.log("[MailReply AI] mountReplyButton: No div#main found");
+      return;
+    }
 
     const header = main.querySelector("header");
-    if (!header || header.querySelector(".mrai-wa-btn")) return;
+    if (!header) {
+      console.log("[MailReply AI] mountReplyButton: No header found in div#main");
+      return;
+    }
+    
+    if (header.querySelector(".mrai-wa-btn")) {
+      return;
+    }
+
+    console.log("[MailReply AI] Mounting reply button...");
 
     // Try multiple selectors for the action container in WhatsApp header
-    // WhatsApp updates UI frequently so we try several fallbacks
     const actionContainer =
       header.querySelector('[data-testid="conversation-header-actions"]') ||
       header.querySelector("div.tvfksri0") ||
       header.querySelector('div[style*="justify-content: flex-end"]') ||
-      // Last resort: inject at the end of the header itself
       header;
 
     const button = document.createElement("button");
@@ -214,7 +227,7 @@ export class WhatsAppAdapter implements ConversationPlatform {
       this.openPanel();
     });
 
-    // Prepend so button appears on the left side of action icons
+    console.log("[MailReply AI] Button mounted to:", actionContainer.tagName, actionContainer.className);
     actionContainer.prepend(button);
   }
 }

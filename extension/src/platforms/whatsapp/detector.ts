@@ -24,10 +24,16 @@ function isChatOpen(): boolean {
  */
 function getChatIdentity(): ChatIdentity | undefined {
   const main = document.querySelector("div#main");
-  if (!main) return undefined;
+  if (!main) {
+    console.log("[MailReply AI] detector: No div#main found");
+    return undefined;
+  }
 
   const header = main.querySelector("header");
-  if (!header) return undefined;
+  if (!header) {
+    console.log("[MailReply AI] detector: No header found in div#main");
+    return undefined;
+  }
 
   // The chat title is usually the first span with dir="auto" inside the header
   // or a specific data-testid="conversation-info-header"
@@ -48,6 +54,7 @@ function getChatIdentity(): ChatIdentity | undefined {
 
 export async function detectActiveConversation(): Promise<ConversationDetection> {
   if (!isAuthenticated()) {
+    console.log("[MailReply AI] detector: isAuthenticated is false");
     return {
       active: false,
       error: "WhatsApp Web is not authenticated or not fully loaded.",
@@ -55,6 +62,7 @@ export async function detectActiveConversation(): Promise<ConversationDetection>
   }
 
   if (!isChatOpen()) {
+    console.log("[MailReply AI] detector: isChatOpen is false (div#main missing)");
     return {
       active: false,
       error: "No active chat open.",
@@ -63,6 +71,7 @@ export async function detectActiveConversation(): Promise<ConversationDetection>
 
   const identity = getChatIdentity();
   if (!identity) {
+    console.log("[MailReply AI] detector: getChatIdentity failed");
     return {
       active: false,
       error: "Could not determine chat identity.",
