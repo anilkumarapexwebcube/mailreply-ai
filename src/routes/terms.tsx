@@ -217,8 +217,8 @@ function TermsOfService() {
           <div className="bg-muted/30 p-4 rounded-lg mt-4 mb-8 text-sm">
             <p><strong>MailReply AI</strong></p>
             <p><strong>Website:</strong> <a href="https://mailreplyai.vercel.app">https://mailreplyai.vercel.app</a></p>
-            <p><strong>Support Email:</strong> <a href="mailto:onpage.apexweb.cube@gmail.com">onpage.apexweb.cube@gmail.com</a></p>
-            <p><strong>Legal Email:</strong> <a href="mailto:onpage.apexweb.cube@gmail.com">onpage.apexweb.cube@gmail.com</a></p>
+            <p><strong>Support Email:</strong> <a href="mailto:anilkumar.apexweb.cube@gmail.com">anilkumar.apexweb.cube@gmail.com</a></p>
+            <p><strong>Legal Email:</strong> <a href="mailto:anilkumar.apexweb.cube@gmail.com">anilkumar.apexweb.cube@gmail.com</a></p>
             <p><strong>Business Address:</strong> Pratap Nagar, Jaipur, Rajasthan</p>
           </div>
 

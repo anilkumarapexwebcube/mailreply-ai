@@ -79,10 +79,10 @@ function PrivacyPolicy() {
             <li>Other information required to produce the requested response</li>
           </ul>
           <p>The exact handling of this information depends on the AI provider selected in the Service.</p>
-          
+
           <h3 className="text-lg mt-6 mb-2">Local AI</h3>
           <p>If you configure MailReply AI to use a locally running AI system, such as Ollama, the AI processing may occur on your own computer or local environment rather than being sent to a third-party hosted AI provider.</p>
-          
+
           <h3 className="text-lg mt-6 mb-2">External AI providers</h3>
           <p>
             If you configure a cloud-based or third-party AI provider, the information required to generate the requested reply may be transmitted to that provider through the configuration you have selected. You are responsible for reviewing the privacy and data-processing practices of any third-party AI provider you choose. MailReply AI does not represent that all third-party AI providers follow the same retention, training, or privacy practices.
@@ -265,8 +265,8 @@ function PrivacyPolicy() {
           <div className="bg-muted/30 p-4 rounded-lg mt-4 mb-8 text-sm">
             <p><strong>Company / Product:</strong> MailReply AI</p>
             <p><strong>Website:</strong> <a href="https://mailreplyai.vercel.app">https://mailreplyai.vercel.app</a></p>
-            <p><strong>Privacy Email:</strong> <a href="mailto:onpage.apexweb.cube@gmail.com">onpage.apexweb.cube@gmail.com</a></p>
-            <p><strong>Support Email:</strong> <a href="mailto:onpage.apexweb.cube@gmail.com">onpage.apexweb.cube@gmail.com</a></p>
+            <p><strong>Privacy Email:</strong> <a href="mailto:anilkumar.apexweb.cube@gmail.com">anilkumar.apexweb.cube@gmail.com</a></p>
+            <p><strong>Support Email:</strong> <a href="mailto:anilkumar.apexweb.cube@gmail.com">anilkumar.apexweb.cube@gmail.com</a></p>
             <p><strong>Address:</strong> Pratap Nagar jaipur, Rajasthan</p>
           </div>
 

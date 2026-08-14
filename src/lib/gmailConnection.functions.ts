@@ -1,11 +1,12 @@
 import { createServerFn } from "@tanstack/react-start";
-import { getRequest } from "@tanstack/react-start/server";
+
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 export const startGmailConnect = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { startGmailConnectImpl } = await import("@/server/connectionFlow.server");
+    const { getRequest } = await import("@tanstack/react-start/server");
     const request = getRequest();
     if (!request) throw new Error("OAuth must start from an app request.");
     return startGmailConnectImpl(context.userId, request.url);
@@ -19,6 +20,7 @@ export const completeGmailConnection = createServerFn({ method: "POST" })
   })
   .handler(async ({ data, context }) => {
     const { completeGmailConnectionImpl } = await import("@/server/connectionFlow.server");
+    const { getRequest } = await import("@tanstack/react-start/server");
     const request = getRequest();
     if (!request) throw new Error("OAuth completion must come from an app request.");
     return completeGmailConnectionImpl(context.userId, data.code, request.url);

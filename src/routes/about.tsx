@@ -75,12 +75,12 @@ function AboutPage() {
 
           <h2 className="text-3xl mt-12 mb-4">How It Works</h2>
           <ol className="space-y-4">
-            <li><strong>1. Open a Gmail Conversation</strong><br/>Open the email thread you want to respond to.</li>
-            <li><strong>2. Click AI Reply</strong><br/>MailReply AI detects the relevant conversation and prepares the available context.</li>
-            <li><strong>3. Add Instructions</strong><br/>Tell the AI how you want the response written. For example: <em>"Keep it short and professionally confirm that we can deliver the update by Friday."</em> You can also choose preferences such as tone, length, and language.</li>
-            <li><strong>4. Generate the Reply</strong><br/>MailReply AI analyzes the conversation and creates a contextual reply draft.</li>
-            <li><strong>5. Review and Edit</strong><br/>Read the generated response, make any changes you want, and ensure it accurately represents what you want to communicate.</li>
-            <li><strong>6. Insert Into Gmail</strong><br/>Insert the approved draft into the Gmail reply composer and send it yourself.</li>
+            <li><strong>1. Open a Gmail Conversation</strong><br />Open the email thread you want to respond to.</li>
+            <li><strong>2. Click AI Reply</strong><br />MailReply AI detects the relevant conversation and prepares the available context.</li>
+            <li><strong>3. Add Instructions</strong><br />Tell the AI how you want the response written. For example: <em>"Keep it short and professionally confirm that we can deliver the update by Friday."</em> You can also choose preferences such as tone, length, and language.</li>
+            <li><strong>4. Generate the Reply</strong><br />MailReply AI analyzes the conversation and creates a contextual reply draft.</li>
+            <li><strong>5. Review and Edit</strong><br />Read the generated response, make any changes you want, and ensure it accurately represents what you want to communicate.</li>
+            <li><strong>6. Insert Into Gmail</strong><br />Insert the approved draft into the Gmail reply composer and send it yourself.</li>
           </ol>
           <p className="font-medium">MailReply AI does not automatically send your email. You stay in control of the final message.</p>
 
@@ -145,7 +145,7 @@ function AboutPage() {
           <p className="font-medium text-lg">The focus will remain the same: Less repetitive work. Better email communication. More time for meaningful work.</p>
 
           <div className="my-16 text-center bg-primary/5 rounded-3xl p-10 border border-primary/10">
-            <h3 className="text-2xl font-bold mb-2 mt-0">Your conversations have context.<br/>Your AI replies should too.</h3>
+            <h3 className="text-2xl font-bold mb-2 mt-0">Your conversations have context.<br />Your AI replies should too.</h3>
             <p className="text-muted-foreground mb-8">Understand the conversation. Generate the reply. Keep control.</p>
             <div className="flex flex-wrap items-center justify-center gap-4 not-prose">
               <Button asChild size="lg" className="rounded-full shadow-lg">
@@ -157,8 +157,8 @@ function AboutPage() {
           <h2 className="text-2xl mt-12 mb-4">Contact</h2>
           <p>Have questions, feedback, or ideas for MailReply AI? We would love to hear from you.</p>
           <div className="bg-muted/30 p-4 rounded-lg mt-4 mb-8 text-sm">
-            <p className="flex items-center gap-2"><Mail className="size-4 text-muted-foreground"/> <strong>Email:</strong> <a href="mailto:onpage.apexweb.cube@gmail.com">onpage.apexweb.cube@gmail.com</a></p>
-            <p className="flex items-center gap-2"><Mail className="size-4 text-muted-foreground"/> <strong>Privacy:</strong> <a href="mailto:onpage.apexweb.cube@gmail.com">onpage.apexweb.cube@gmail.com</a></p>
+            <p className="flex items-center gap-2"><Mail className="size-4 text-muted-foreground" /> <strong>Email:</strong> <a href="mailto:anilkumar.apexweb.cube@gmail.com">anilkumar.apexweb.cube@gmail.com</a></p>
+            <p className="flex items-center gap-2"><Mail className="size-4 text-muted-foreground" /> <strong>Privacy:</strong> <a href="mailto:anilkumar.apexweb.cube@gmail.com">anilkumar.apexweb.cube@gmail.com</a></p>
             <p><strong>Website:</strong> <a href="https://mailreplyai.vercel.app">https://mailreplyai.vercel.app</a></p>
           </div>
         </article>
