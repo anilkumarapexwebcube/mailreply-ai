@@ -31,6 +31,8 @@ export class ReplyError extends Error {
 }
 
 export interface ReplyRequest {
+  platform?: "gmail" | "whatsapp";
+  conversation?: any; // ConversationContext from extension
   threadId?: string;
   subject?: string;
   instruction?: string;
@@ -40,9 +42,11 @@ export interface ReplyRequest {
 }
 
 export async function generateReplyForUser(userId: string, input: ReplyRequest) {
-  // The stored "connection key" is now a Google OAuth refresh token.
+  const isWhatsApp = input.platform === "whatsapp";
+
+  // For WhatsApp, Gmail token is not required. Only required for Gmail platform.
   const refreshToken = await getConnectionKeyForUser(userId, GMAIL_CONNECTOR_ID);
-  if (!refreshToken) {
+  if (!isWhatsApp && !refreshToken) {
     throw new ReplyError(
       "Gmail is not connected for this account. Open MailReply AI and connect Gmail.",
       412,
@@ -56,27 +60,12 @@ export async function generateReplyForUser(userId: string, input: ReplyRequest) 
     : "medium";
   const instruction = (input.instruction ?? "").slice(0, 1500);
 
-  let userEmail: string | null = null;
-  try {
-    userEmail = (await getProfile(refreshToken)).emailAddress ?? null;
-  } catch (error) {
-    if (error instanceof GmailError && error.status === 403) {
-      throw new ReplyError(
-        "Gmail access was not granted with the required permissions. Reconnect Gmail in MailReply AI.",
-        403,
-        "insufficient_scope",
-      );
-    }
-  }
-
   let thread: ConversationThread | null = null;
-  const candidates: string[] = [];
-  if (input.threadId) candidates.push(input.threadId.replace(/^#/, ""));
-
-  for (const candidate of candidates) {
+  let userEmail: string | null = null;
+  
+  if (!isWhatsApp) {
     try {
-      thread = await fetchConversation(refreshToken, candidate);
-      break;
+      userEmail = (await getProfile(refreshToken!)).emailAddress ?? null;
     } catch (error) {
       if (error instanceof GmailError && error.status === 403) {
         throw new ReplyError(
@@ -86,23 +75,43 @@ export async function generateReplyForUser(userId: string, input: ReplyRequest) 
         );
       }
     }
-  }
 
-  if (!thread && input.subject) {
-    const found = await findThreadBySubject(refreshToken, input.subject);
-    if (found) {
+    const candidates: string[] = [];
+    if (input.threadId) candidates.push(input.threadId.replace(/^#/, ""));
+
+    for (const candidate of candidates) {
       try {
-        thread = await fetchConversation(refreshToken, found);
-      } catch {
-        // Ignore — will fall back to compose mode
+        thread = await fetchConversation(refreshToken!, candidate);
+        break;
+      } catch (error) {
+        if (error instanceof GmailError && error.status === 403) {
+          throw new ReplyError(
+            "Gmail access was not granted with the required permissions. Reconnect Gmail in MailReply AI.",
+            403,
+            "insufficient_scope",
+          );
+        }
+      }
+    }
+
+    if (!thread && input.subject) {
+      const found = await findThreadBySubject(refreshToken!, input.subject);
+      if (found) {
+        try {
+          thread = await fetchConversation(refreshToken!, found);
+        } catch {
+          // Ignore — will fall back to compose mode
+        }
       }
     }
   }
 
   // ── Compose mode: no thread available — generate a fresh email ──
-  const isComposeMode = !thread;
+  const isComposeMode = !isWhatsApp && !thread;
 
   const draft = await generateReply({
+    platform: input.platform || "gmail",
+    conversation: input.conversation,
     thread: isComposeMode ? null : thread,
     userEmail,
     userName: userEmail ? (userEmail.split("@")[0] ?? null) : null,
@@ -117,7 +126,7 @@ export async function generateReplyForUser(userId: string, input: ReplyRequest) 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await supabaseAdmin.from("reply_history").insert({
       user_id: userId,
-      thread_subject: thread?.subject || input.subject || "",
+      thread_subject: isWhatsApp ? (input.conversation?.title || "WhatsApp Chat") : (thread?.subject || input.subject || ""),
       instruction,
       tone,
       length,
@@ -129,9 +138,9 @@ export async function generateReplyForUser(userId: string, input: ReplyRequest) 
 
   return {
     draft,
-    subject: thread?.subject || input.subject || "",
-    threadId: thread?.threadId || input.threadId || "",
-    messageCount: thread?.messages?.length || 0,
-    participants: thread?.lastFrom || "",
+    subject: isWhatsApp ? input.conversation?.title || "" : (thread?.subject || input.subject || ""),
+    threadId: isWhatsApp ? input.conversation?.conversationId || "" : (thread?.threadId || input.threadId || ""),
+    messageCount: isWhatsApp ? input.conversation?.visibleMessageCount || 0 : (thread?.messages?.length || 0),
+    participants: isWhatsApp ? input.conversation?.participants?.map((p: any) => p.displayName).join(", ") || "" : (thread?.lastFrom || ""),
   };
 }

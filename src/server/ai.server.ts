@@ -27,6 +27,8 @@ const LENGTH_GUIDE: Record<ReplyLength, string> = {
 };
 
 export interface GenerateReplyArgs {
+  platform?: "gmail" | "whatsapp";
+  conversation?: any;
   thread: ConversationThread | null;
   userEmail: string | null;
   userName?: string | null;
@@ -46,6 +48,38 @@ export class AiGatewayError extends Error {
 }
 
 function buildPrompts(args: GenerateReplyArgs): { system: string; prompt: string } {
+  const isWhatsApp = args.platform === "whatsapp";
+
+  // ── WhatsApp Mode ──
+  if (isWhatsApp && args.conversation) {
+    const system = [
+      "You are an expert AI assistant integrated into WhatsApp Web. You draft natural, conversational, and concise replies.",
+      "Rules:",
+      "- Write ONLY the reply text. No quotes, no markdown fences, no 'Here is your reply'.",
+      "- Do not invent facts, names, or dates.",
+      "- Match the language of the conversation.",
+      "- Ensure the reply feels like a text message, NOT an email. Do not use formal email greetings (e.g. 'Dear X') or sign-offs (e.g. 'Best regards') unless explicitly requested.",
+      `Tone: ${args.tone}. Length: ${LENGTH_GUIDE[args.length]}`,
+    ].join("\n");
+
+    const formattedMessages = args.conversation.messages.map((m: any) => 
+      `${m.sender?.displayName || (m.direction === "outgoing" ? "You" : "Contact")}: ${m.text}`
+    ).join("\n\n");
+
+    const prompt = [
+      "CONVERSATION (oldest to newest):",
+      formattedMessages,
+      "",
+      args.instruction?.trim()
+        ? `USER INSTRUCTION (highest priority - follow it exactly):\n${args.instruction.trim()}`
+        : "USER INSTRUCTION: none - write the most useful, contextually correct reply.",
+      "",
+      "Write the reply body now.",
+    ].join("\n");
+
+    return { system, prompt };
+  }
+
   // ── Compose mode: no thread context, just write a fresh email ──
   if (args.composeMode || !args.thread) {
     const system = [
