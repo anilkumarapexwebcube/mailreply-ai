@@ -116,7 +116,7 @@ export class GmailAdapter {
       chrome.runtime.sendMessage(
         {
           type: "MAILREPLY_GENERATE",
-          payload: { platform: "gmail", threadId, subject, instruction, tone, length },
+          payload: { platform: "gmail", mode, threadId, subject, instruction, tone, length },
         },
         (response) => {
           if (!response || !response.ok) {
