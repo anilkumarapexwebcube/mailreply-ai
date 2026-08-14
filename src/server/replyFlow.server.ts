@@ -90,24 +90,26 @@ export async function generateReplyForUser(userId: string, input: ReplyRequest) 
 
   if (!thread && input.subject) {
     const found = await findThreadBySubject(refreshToken, input.subject);
-    if (found) thread = await fetchConversation(refreshToken, found);
+    if (found) {
+      try {
+        thread = await fetchConversation(refreshToken, found);
+      } catch {
+        // Ignore — will fall back to compose mode
+      }
+    }
   }
 
-  if (!thread) {
-    throw new ReplyError(
-      "Could not read this conversation from Gmail. Open the conversation fully and try again.",
-      404,
-      "thread_not_found",
-    );
-  }
+  // ── Compose mode: no thread available — generate a fresh email ──
+  const isComposeMode = !thread;
 
   const draft = await generateReply({
-    thread,
+    thread: isComposeMode ? null : thread,
     userEmail,
     userName: userEmail ? (userEmail.split("@")[0] ?? null) : null,
     instruction,
     tone,
     length,
+    composeMode: isComposeMode,
     ...(input.signal ? { signal: input.signal } : {}),
   });
 
@@ -115,7 +117,7 @@ export async function generateReplyForUser(userId: string, input: ReplyRequest) 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await supabaseAdmin.from("reply_history").insert({
       user_id: userId,
-      thread_subject: thread.subject,
+      thread_subject: thread?.subject || input.subject || "",
       instruction,
       tone,
       length,
@@ -127,9 +129,9 @@ export async function generateReplyForUser(userId: string, input: ReplyRequest) 
 
   return {
     draft,
-    subject: thread.subject,
-    threadId: thread.threadId,
-    messageCount: thread.messages.length,
-    participants: thread.lastFrom,
+    subject: thread?.subject || input.subject || "",
+    threadId: thread?.threadId || input.threadId || "",
+    messageCount: thread?.messages?.length || 0,
+    participants: thread?.lastFrom || "",
   };
 }

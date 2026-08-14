@@ -27,12 +27,13 @@ const LENGTH_GUIDE: Record<ReplyLength, string> = {
 };
 
 export interface GenerateReplyArgs {
-  thread: ConversationThread;
+  thread: ConversationThread | null;
   userEmail: string | null;
   userName?: string | null;
   instruction?: string;
   tone: Tone;
   length: ReplyLength;
+  composeMode?: boolean;
   signal?: AbortSignal;
 }
 
@@ -45,6 +46,30 @@ export class AiGatewayError extends Error {
 }
 
 function buildPrompts(args: GenerateReplyArgs): { system: string; prompt: string } {
+  // ── Compose mode: no thread context, just write a fresh email ──
+  if (args.composeMode || !args.thread) {
+    const system = [
+      "You are an expert executive email assistant. You write professional emails on behalf of the user.",
+      "Rules:",
+      "- Write ONLY the email body. No subject line, no markdown fences, no 'Here is your email'.",
+      "- Do not invent facts, names, prices, or dates not mentioned in the instruction.",
+      "- If the user wants a greeting or sign-off, include one appropriate to the tone.",
+      `- Sign off as ${args.userName || "the sender"}.`,
+      `Tone: ${args.tone}. Length: ${LENGTH_GUIDE[args.length]}`,
+    ].join("\n");
+
+    const prompt = [
+      args.instruction?.trim()
+        ? `USER INSTRUCTION:\n${args.instruction.trim()}`
+        : "Write a clear, professional email.",
+      "",
+      "Write the email body now.",
+    ].join("\n");
+
+    return { system, prompt };
+  }
+
+  // ── Reply mode: thread context provided ──
   const system = [
     "You are an expert executive email assistant. You draft replies that a busy professional can send with minimal editing.",
     "Rules:",
