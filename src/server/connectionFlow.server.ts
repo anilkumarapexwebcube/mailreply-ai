@@ -1,4 +1,4 @@
-// Server-only: Gmail App User Connector flow — direct Google OAuth implementation.
+// Server-only: Gmail App User Connector flow - direct Google OAuth implementation.
 // Replaces the old gateway with standard googleapis OAuth2.
 import {
   buildGoogleAuthUrl,

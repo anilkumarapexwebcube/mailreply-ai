@@ -157,7 +157,7 @@ export async function fetchConversation(
   } catch (error: unknown) {
     const status = (error as { code?: number }).code ?? 500;
     if (status === 404 || status === 400) {
-      // The Gmail UI hash is sometimes a message id — resolve it to its thread.
+      // The Gmail UI hash is sometimes a message id - resolve it to its thread.
       const msgRes = await gmail.users.messages.get({
         userId: "me",
         id: candidateId,
@@ -204,7 +204,7 @@ export async function fetchConversation(
   };
 }
 
-/** Finds the most recent thread matching a subject line — fallback when no id is available. */
+/** Finds the most recent thread matching a subject line - fallback when no id is available. */
 export async function findThreadBySubject(
   refreshToken: string,
   subject: string,

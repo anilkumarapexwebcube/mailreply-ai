@@ -6,7 +6,7 @@ import { Shell } from "@/components/layout/Shell";
 export const Route = createFileRoute("/guide")({
   head: () => ({
     meta: [
-      { title: "How it works — MailReply AI" },
+      { title: "How it works - MailReply AI" },
       { name: "description", content: "A simple guide to setting up and using MailReply AI." },
     ],
   }),
@@ -40,8 +40,8 @@ function GuidePage() {
                 <h2 className="text-2xl font-semibold">Connect your Gmail</h2>
               </div>
               <p className="mt-3 text-muted-foreground leading-relaxed">
-                First, you need to tell MailReply AI which Gmail account you want to use. 
-                When you click "Connect Gmail" in your dashboard, you will securely authorize the app 
+                First, you need to tell MailReply AI which Gmail account you want to use.
+                When you click "Connect Gmail" in your dashboard, you will securely authorize the app
                 to read your emails. <strong>Don't worry, we only read the email you are currently looking at</strong> so the AI understands the context.
               </p>
             </div>
@@ -58,7 +58,7 @@ function GuidePage() {
                 <h2 className="text-2xl font-semibold">Install the Extension</h2>
               </div>
               <p className="mt-3 text-muted-foreground leading-relaxed">
-                The magic happens directly inside your Chrome browser. 
+                The magic happens directly inside your Chrome browser.
               </p>
               <ul className="mt-4 space-y-2 text-muted-foreground">
                 <li className="flex items-start gap-2">
@@ -92,7 +92,7 @@ function GuidePage() {
                 <h2 className="text-2xl font-semibold">Pair the Extension</h2>
               </div>
               <p className="mt-3 text-muted-foreground leading-relaxed">
-                To link the Chrome extension to your account, generate a <strong>Pairing Key</strong> in your dashboard. 
+                To link the Chrome extension to your account, generate a <strong>Pairing Key</strong> in your dashboard.
                 Copy this key, click the MailReply AI icon in your browser's extension bar (the puzzle piece icon), and paste the key.
               </p>
             </div>

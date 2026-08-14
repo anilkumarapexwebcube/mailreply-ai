@@ -223,7 +223,7 @@ function Dashboard() {
         open={signOutOpen}
         onOpenChange={setSignOutOpen}
         title="Sign out?"
-        description="You will be signed out of MailReply AI. Your Gmail connection and pairing key will remain saved — just sign back in to continue."
+        description="You will be signed out of MailReply AI. Your Gmail connection and pairing key will remain saved - just sign back in to continue."
         confirmLabel="Sign out"
         cancelLabel="Stay signed in"
         variant="warning"
@@ -355,23 +355,23 @@ function Dashboard() {
                 {token ? "Regenerate pairing key" : "Generate pairing key"}
               </Button>
               {token && (
-              <>
-                <Button
-                  variant="ghost"
-                  onClick={() => {
-                    void navigator.clipboard.writeText(token);
-                    setCopied(true);
-                    toast.success("Copied to clipboard");
-                  }}
-                >
-                  {copied ? <Check className="mr-1.5 size-4" /> : <Copy className="mr-1.5 size-4" />}
-                  {copied ? "Copied!" : "Copy"}
-                </Button>
-                <Button variant="ghost" className="text-destructive hover:bg-destructive/10 hover:text-destructive" onClick={() => revoke.mutate()}>
-                  Revoke
-                </Button>
-              </>
-            )}
+                <>
+                  <Button
+                    variant="ghost"
+                    onClick={() => {
+                      void navigator.clipboard.writeText(token);
+                      setCopied(true);
+                      toast.success("Copied to clipboard");
+                    }}
+                  >
+                    {copied ? <Check className="mr-1.5 size-4" /> : <Copy className="mr-1.5 size-4" />}
+                    {copied ? "Copied!" : "Copy"}
+                  </Button>
+                  <Button variant="ghost" className="text-destructive hover:bg-destructive/10 hover:text-destructive" onClick={() => revoke.mutate()}>
+                    Revoke
+                  </Button>
+                </>
+              )}
             </div>
             {token && (
               <code className="mt-4 block overflow-x-auto rounded-lg bg-muted px-4 py-3 font-mono text-xs">

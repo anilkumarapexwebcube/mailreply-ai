@@ -5,9 +5,9 @@ import { completeGmailConnection } from "@/lib/gmailConnection.functions";
 export const Route = createFileRoute("/oauth/google-mail/return")({
   head: () => ({
     meta: [
-      { title: "Finishing Gmail connection — MailReply AI" },
+      { title: "Finishing Gmail connection - MailReply AI" },
       { name: "description", content: "Completing the secure Gmail connection for MailReply AI." },
-      { property: "og:title", content: "Finishing Gmail connection — MailReply AI" },
+      { property: "og:title", content: "Finishing Gmail connection - MailReply AI" },
       { property: "og:description", content: "Completing the secure Gmail connection." },
       { name: "robots", content: "noindex" },
     ],

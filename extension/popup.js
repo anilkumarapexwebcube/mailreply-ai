@@ -17,7 +17,7 @@ function check() {
       setState("Paired, but Gmail is not connected. Open the dashboard to connect Gmail.", "bad");
       return;
     }
-    setState(`Ready — Gmail connected as ${response.data.email || "your account"}.`, "ok");
+    setState(`Ready - Gmail connected as ${response.data.email || "your account"}.`, "ok");
   });
 }
 

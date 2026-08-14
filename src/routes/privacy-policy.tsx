@@ -6,7 +6,7 @@ import { Shell } from "@/components/layout/Shell";
 export const Route = createFileRoute("/privacy-policy")({
   head: () => ({
     meta: [
-      { title: "Privacy Policy — MailReply AI" },
+      { title: "Privacy Policy - MailReply AI" },
       { name: "description", content: "Privacy Policy for MailReply AI" },
     ],
   }),

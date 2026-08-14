@@ -1,5 +1,5 @@
 /**
- * Direct Google OAuth helpers — replaces old App User Connector gateway.
+ * Direct Google OAuth helpers - replaces old App User Connector gateway.
  * Uses standard googleapis OAuth2 to generate auth URLs, exchange codes,
  * and make Gmail API calls using the stored refresh token.
  */

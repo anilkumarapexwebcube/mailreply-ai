@@ -6,7 +6,7 @@ import { Shell } from "@/components/layout/Shell";
 export const Route = createFileRoute("/terms")({
   head: () => ({
     meta: [
-      { title: "Terms of Service — MailReply AI" },
+      { title: "Terms of Service - MailReply AI" },
       { name: "description", content: "Terms of Service for MailReply AI" },
     ],
   }),

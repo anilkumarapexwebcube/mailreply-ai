@@ -62,8 +62,8 @@ function buildPrompts(args: GenerateReplyArgs): { system: string; prompt: string
     renderConversationForPrompt(args.thread, args.userEmail),
     "",
     args.instruction?.trim()
-      ? `USER INSTRUCTION (highest priority — follow it exactly):\n${args.instruction.trim()}`
-      : "USER INSTRUCTION: none — write the most useful, contextually correct reply.",
+      ? `USER INSTRUCTION (highest priority - follow it exactly):\n${args.instruction.trim()}`
+      : "USER INSTRUCTION: none - write the most useful, contextually correct reply.",
     "",
     "Write the reply body now.",
   ].join("\n");
@@ -181,7 +181,7 @@ export async function generateReply(args: GenerateReplyArgs): Promise<string> {
     } catch (error) {
       lastError = error;
       const message = error instanceof Error ? error.message : String(error);
-      // Don't try next model on rate limit or auth errors — fail fast
+      // Don't try next model on rate limit or auth errors - fail fast
       if (/\b(401|403)\b/.test(message)) throw error;
       console.warn("[AI fallback] Model failed, trying next:", message);
     }
