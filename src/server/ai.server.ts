@@ -5,7 +5,7 @@ import { renderConversationForPrompt } from "./gmail.server";
 
 const MODELS = {
   gemini: "gemini-2.0-flash",
-  claude: "claude-sonnet-4-5",
+  claude: "claude-3-5-sonnet-latest",
   gpt: "gpt-4o-mini",
   groq: "llama-3.3-70b-versatile",
 } as const;
@@ -50,35 +50,41 @@ export class AiGatewayError extends Error {
 function buildPrompts(args: GenerateReplyArgs): { system: string; prompt: string } {
   const isWhatsApp = args.platform === "whatsapp";
 
-  // ── WhatsApp Mode ──
+  // ── WhatsApp Mode ── (IRON-CLAD: never generate email content)
   if (isWhatsApp) {
     const system = [
-      "You are an expert AI assistant integrated into WhatsApp Web. You draft natural, conversational, and concise replies.",
-      "Rules:",
-      "- Write ONLY the reply text. No quotes, no markdown fences, no 'Here is your reply'.",
-      "- Do not invent facts, names, or dates.",
-      "- Match the language of the conversation.",
-      "- Ensure the reply feels like a text message, NOT an email. Do not use formal email greetings (e.g. 'Dear X') or sign-offs (e.g. 'Best regards') unless explicitly requested.",
+      "You are an AI assistant embedded inside WhatsApp Web. Your ONLY job is to draft short, casual, human WhatsApp text message replies.",
+      "",
+      "STRICT RULES — violating ANY rule is a critical failure:",
+      "1. Output ONLY the raw reply text that should be sent. Nothing else.",
+      "2. NEVER start with 'Dear', 'Hello Sir', 'Hi [Name],' or any formal greeting.",
+      "3. NEVER end with 'Regards', 'Best regards', 'Sincerely', 'Thanks and regards', or ANY sign-off or signature.",
+      "4. NEVER write your name, the user's name, or any email address at the end.",
+      "5. Do NOT use formal email language. Write like a normal person texting on WhatsApp.",
+      "6. Keep it short and natural. Match the tone and language of the conversation.",
+      "7. If no conversation context is provided, still reply as a casual WhatsApp message, NOT an email.",
+      "",
       `Tone: ${args.tone}. Length: ${LENGTH_GUIDE[args.length]}`,
     ].join("\n");
 
-    // Format messages if conversation exists, otherwise use a placeholder
-    let formattedMessages = "No previous messages detected.";
-    if (args.conversation && args.conversation.messages && args.conversation.messages.length > 0) {
-      formattedMessages = args.conversation.messages.map((m: any) => 
-        `${m.sender?.displayName || (m.direction === "outgoing" ? "You" : "Contact")}: ${m.text}`
-      ).join("\n\n");
+    // Format messages if conversation exists
+    let conversationContext = "";
+    if (args.conversation?.messages?.length > 0) {
+      conversationContext = args.conversation.messages
+        .map((m: any) => `${m.sender?.displayName || (m.direction === "outgoing" ? "You" : "Them")}: ${m.text}`)
+        .join("\n");
     }
 
     const prompt = [
-      "CONVERSATION (oldest to newest):",
-      formattedMessages,
+      conversationContext
+        ? `WHATSAPP CONVERSATION (read to understand context, then reply to the last message):\n${conversationContext}`
+        : "CONTEXT: No previous messages available.",
       "",
       args.instruction?.trim()
-        ? `USER INSTRUCTION (highest priority - follow it exactly):\n${args.instruction.trim()}`
-        : "USER INSTRUCTION: none - write the most useful, contextually correct reply.",
+        ? `INSTRUCTION: ${args.instruction.trim()}`
+        : "Write a short, natural WhatsApp reply to the last message above.",
       "",
-      "Write the reply body now.",
+      "YOUR REPLY (plain text only, no greeting, no sign-off, no name):",
     ].join("\n");
 
     return { system, prompt };
@@ -134,11 +140,22 @@ function buildPrompts(args: GenerateReplyArgs): { system: string; prompt: string
   return { system, prompt };
 }
 
-function cleanDraft(text: string): string {
-  return text
+function cleanDraft(text: string, isWhatsApp = false): string {
+  let cleaned = text
     .replace(/^```[a-z]*\n?/i, "")
     .replace(/```$/i, "")
     .trim();
+
+  if (isWhatsApp) {
+    // Strip any email-style sign-off lines that leaked through
+    // Matches lines like: "Best regards,", "Sincerely,", "Thanks,", "Regards,", then a name/email on the next line
+    cleaned = cleaned
+      .replace(/\n+(best regards|regards|sincerely|thanks and regards|warm regards|kind regards|yours (truly|sincerely)|धन्यवाद|सादर|शुभकामनाएं)[,.]?\s*\n[\s\S]*/i, "")
+      .replace(/\n+(best regards|regards|sincerely|thanks and regards|warm regards|kind regards)[,.]?\s*$/i, "")
+      .trim();
+  }
+
+  return cleaned;
 }
 
 /** Attempt with Google Gemini (primary). */
@@ -158,7 +175,7 @@ async function tryGemini(args: GenerateReplyArgs): Promise<string> {
     temperature: 0.6,
     ...(args.signal ? { abortSignal: args.signal } : {}),
   });
-  return cleanDraft(text);
+  return cleanDraft(text, args.platform === "whatsapp");
 }
 
 /** Attempt with Anthropic Claude (fallback 1). */
@@ -178,7 +195,7 @@ async function tryClaude(args: GenerateReplyArgs): Promise<string> {
     temperature: 0.6,
     ...(args.signal ? { abortSignal: args.signal } : {}),
   });
-  return cleanDraft(text);
+  return cleanDraft(text, args.platform === "whatsapp");
 }
 
 /** Attempt with OpenAI GPT-4o (fallback 2). */
@@ -198,7 +215,7 @@ async function tryOpenAI(args: GenerateReplyArgs): Promise<string> {
     temperature: 0.6,
     ...(args.signal ? { abortSignal: args.signal } : {}),
   });
-  return cleanDraft(text);
+  return cleanDraft(text, args.platform === "whatsapp");
 }
 
 /** Attempt with Groq Llama (fallback 3). */
@@ -218,7 +235,7 @@ async function tryGroq(args: GenerateReplyArgs): Promise<string> {
     temperature: 0.6,
     ...(args.signal ? { abortSignal: args.signal } : {}),
   });
-  return cleanDraft(text);
+  return cleanDraft(text, args.platform === "whatsapp");
 }
 
 /**
