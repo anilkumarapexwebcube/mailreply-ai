@@ -79,7 +79,12 @@ function Shell({ children, right }: { children: React.ReactNode; right?: React.R
           />
           <span className="font-display text-lg font-semibold">MailReply AI</span>
         </div>
-        {right}
+        <div className="flex items-center gap-4">
+          <Link to="/guide" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+            Guide
+          </Link>
+          {right}
+        </div>
       </header>
       {children}
     </div>
@@ -111,14 +116,8 @@ function Landing() {
             <Button asChild size="lg">
               <Link to="/auth">Create your account</Link>
             </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              onClick={() => {
-                document.getElementById("how")?.scrollIntoView({ behavior: "smooth", block: "start" });
-              }}
-            >
-              How it works
+            <Button asChild size="lg" variant="outline">
+              <Link to="/guide">How it works</Link>
             </Button>
           </div>
         </section>

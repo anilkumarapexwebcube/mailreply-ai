@@ -86,7 +86,7 @@ export function ConfirmDialog({
             <AlertDialog.Action asChild>
               <button
                 onClick={onConfirm}
-                className={`inline-flex h-9 items-center justify-center rounded-md px-4 text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 sm:w-auto w-full ${styles.confirm || "bg-primary text-primary-foreground hover:bg-primary/90"}`}
+                className={`inline-flex h-9 items-center justify-center rounded-md px-4 text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 sm:w-auto w-full cursor-pointer ${styles.confirm || "bg-primary text-primary-foreground hover:bg-primary/90"}`}
               >
                 {confirmLabel}
               </button>

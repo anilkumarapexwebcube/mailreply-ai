@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as GuideRouteImport } from './routes/guide'
 import { Route as ApiPublicDownloadExtensionRouteImport } from './routes/api/public/download-extension'
 import { Route as OauthGoogleMailReturnRouteImport } from './routes/oauth.google-mail.return'
 import { Route as ApiPublicExtensionGenerateReplyRouteImport } from './routes/api/public/extension/generate-reply'
@@ -24,6 +25,11 @@ const IndexRoute = IndexRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GuideRoute = GuideRouteImport.update({
+  id: '/guide',
+  path: '/guide',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicDownloadExtensionRoute =
@@ -53,6 +59,7 @@ const ApiPublicExtensionStatusRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/guide': typeof GuideRoute
   '/api/public/download-extension': typeof ApiPublicDownloadExtensionRoute
   '/oauth/google-mail/return': typeof OauthGoogleMailReturnRoute
   '/api/public/extension/generate-reply': typeof ApiPublicExtensionGenerateReplyRoute
@@ -61,6 +68,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/guide': typeof GuideRoute
   '/api/public/download-extension': typeof ApiPublicDownloadExtensionRoute
   '/oauth/google-mail/return': typeof OauthGoogleMailReturnRoute
   '/api/public/extension/generate-reply': typeof ApiPublicExtensionGenerateReplyRoute
@@ -70,6 +78,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/guide': typeof GuideRoute
   '/api/public/download-extension': typeof ApiPublicDownloadExtensionRoute
   '/oauth/google-mail/return': typeof OauthGoogleMailReturnRoute
   '/api/public/extension/generate-reply': typeof ApiPublicExtensionGenerateReplyRoute
@@ -80,6 +89,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/guide'
     | '/api/public/download-extension'
     | '/oauth/google-mail/return'
     | '/api/public/extension/generate-reply'
@@ -88,6 +98,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/guide'
     | '/api/public/download-extension'
     | '/oauth/google-mail/return'
     | '/api/public/extension/generate-reply'
@@ -96,6 +107,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/auth'
+    | '/guide'
     | '/api/public/download-extension'
     | '/oauth/google-mail/return'
     | '/api/public/extension/generate-reply'
@@ -105,6 +117,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
+  GuideRoute: typeof GuideRoute
   ApiPublicDownloadExtensionRoute: typeof ApiPublicDownloadExtensionRoute
   OauthGoogleMailReturnRoute: typeof OauthGoogleMailReturnRoute
   ApiPublicExtensionGenerateReplyRoute: typeof ApiPublicExtensionGenerateReplyRoute
@@ -125,6 +138,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/guide': {
+      id: '/guide'
+      path: '/guide'
+      fullPath: '/guide'
+      preLoaderRoute: typeof GuideRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/download-extension': {
@@ -161,6 +181,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
+  GuideRoute: GuideRoute,
   ApiPublicDownloadExtensionRoute: ApiPublicDownloadExtensionRoute,
   OauthGoogleMailReturnRoute: OauthGoogleMailReturnRoute,
   ApiPublicExtensionGenerateReplyRoute: ApiPublicExtensionGenerateReplyRoute,
