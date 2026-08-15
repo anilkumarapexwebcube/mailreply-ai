@@ -174,9 +174,9 @@ export class AssistantPanel {
         <span class="mrai-head-title">MailReply AI${isCompose ? " · Compose" : ""}${isWhatsApp ? " · WhatsApp" : ""}</span>
         <button class="mrai-mini-toggle mrai-btn" type="button" aria-label="Restore panel" hidden>✦ AI Reply</button>
         <div class="mrai-head-actions">
-          <button class="mrai-maximize" type="button" aria-label="Maximize panel" hidden>▢</button>
-          <button class="mrai-minimize" type="button" aria-label="Minimize panel">-</button>
-          <button class="mrai-close" type="button" aria-label="Close panel">x</button>
+          <button class="mrai-maximize" type="button" aria-label="Maximize panel" hidden>🗖</button>
+          <button class="mrai-minimize" type="button" aria-label="Minimize panel">🗕</button>
+          <button class="mrai-close" type="button" aria-label="Close panel">🗙</button>
         </div>
       </div>
       <div class="mrai-body">
