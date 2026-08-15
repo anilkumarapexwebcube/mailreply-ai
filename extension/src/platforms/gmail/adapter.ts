@@ -1,5 +1,6 @@
 import { AssistantPanel } from "../../ui/panel";
 import type { PlatformType } from "../../shared/types";
+import { generateReplyFromAPI } from "../../shared/api";
 
 export class GmailAdapter {
   private platform: PlatformType = "gmail";
@@ -127,20 +128,13 @@ export class GmailAdapter {
     const threadId = isCompose ? "" : this.threadIdFromUrl();
     const subject = isCompose ? this.getComposeSubject() : this.currentSubject();
 
-    return new Promise((resolve, reject) => {
-      chrome.runtime.sendMessage(
-        {
-          type: "MAILREPLY_GENERATE",
-          payload: { platform: "gmail", threadId, subject, instruction, tone, length },
-        },
-        (response) => {
-          if (!response || !response.ok) {
-            reject(new Error((response && response.data && response.data.error) || "Could not generate a draft."));
-            return;
-          }
-          resolve(response.data.draft || "");
-        }
-      );
+    return generateReplyFromAPI({
+      platform: "gmail",
+      threadId,
+      subject,
+      instruction,
+      tone,
+      length,
     });
   }
 

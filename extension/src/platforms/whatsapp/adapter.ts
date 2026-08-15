@@ -10,6 +10,7 @@ import type {
 import { detectActiveConversation } from "./detector";
 import { getConversation } from "./conversation";
 import { getActiveComposer, insertReply } from "./composer";
+import { generateReplyFromAPI } from "../../shared/api";
 
 /** Simple debounce helper (no lodash dependency needed in extension) */
 function debounce(fn: () => void, ms: number): () => void {
@@ -104,35 +105,25 @@ export class WhatsAppAdapter implements ConversationPlatform {
       throw new Error("Chat changed during generation. Please try again.");
     }
 
-    return new Promise((resolve, reject) => {
-      chrome.runtime.sendMessage(
-        {
-          type: "MAILREPLY_GENERATE",
-          payload: {
-            platform: this.type,
-            conversation: context,
-            instructions: { instruction, tone, length },
-          },
-        },
-        (response) => {
-          // Check again after async response
-          if (this.activeGenerationId !== generationId) {
-            reject(new Error("Chat changed during generation. Please try again."));
-            return;
-          }
-          if (!response || !response.ok) {
-            reject(
-              new Error(
-                (response && response.data && response.data.error) ||
-                  "Could not generate a draft."
-              )
-            );
-            return;
-          }
-          resolve(response.data.draft || "");
-        }
-      );
-    });
+    try {
+      const draft = await generateReplyFromAPI({
+        platform: this.type,
+        conversation: context,
+        instructions: { instruction, tone, length },
+      });
+      
+      // Check again after async response
+      if (this.activeGenerationId !== generationId) {
+        throw new Error("Chat changed during generation. Please try again.");
+      }
+      return draft;
+    } catch (error) {
+      // Check again after async response
+      if (this.activeGenerationId !== generationId) {
+        throw new Error("Chat changed during generation. Please try again.");
+      }
+      throw error;
+    }
   }
 
   private async handleInsertReply(text: string) {
