@@ -18,15 +18,22 @@ interface Payload {
   threadId?: unknown;
   subject?: unknown;
   conversation?: unknown;
+  readFullChat?: unknown;
   instructions?: {
     instruction?: unknown;
     tone?: unknown;
     length?: unknown;
+    language?: unknown;
+    objective?: unknown;
+    emoji?: unknown;
   };
   // Legacy flat fields
   instruction?: unknown;
   tone?: unknown;
   length?: unknown;
+  language?: unknown;
+  objective?: unknown;
+  emoji?: unknown;
 }
 
 export const Route = createFileRoute("/api/public/extension/generate-reply")({
@@ -63,7 +70,11 @@ export const Route = createFileRoute("/api/public/extension/generate-reply")({
             instruction: str(payload.instructions?.instruction || payload.instruction, 1500) || "",
             tone: str(payload.instructions?.tone || payload.tone, 40) || "",
             length: str(payload.instructions?.length || payload.length, 40) || "",
-            
+            language: str(payload.instructions?.language || payload.language, 40) || "",
+            objective: str(payload.instructions?.objective || payload.objective, 40) || "",
+            emoji: str(payload.instructions?.emoji || payload.emoji, 20) || "",
+            ...(typeof payload.readFullChat === "boolean" ? { readFullChat: payload.readFullChat } : {}),
+
             signal: request.signal,
           });
           return json(result);

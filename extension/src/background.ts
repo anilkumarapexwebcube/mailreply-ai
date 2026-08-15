@@ -1,6 +1,4 @@
-// Vite injects process.env.MAILREPLY_API_BASE during build
-// @ts-ignore
-const MAILREPLY_API_BASE = typeof process !== 'undefined' && process.env && process.env.MAILREPLY_API_BASE ? process.env.MAILREPLY_API_BASE : "http://localhost:3000";
+import { MAILREPLY_API_BASE } from "./shared/config";
 
 async function getToken() {
   const { pairingToken } = await chrome.storage.local.get("pairingToken");

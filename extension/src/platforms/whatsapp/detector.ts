@@ -29,20 +29,24 @@ function getChatIdentity(): ChatIdentity | undefined {
   const header = main.querySelector("header");
   if (!header) return undefined;
 
-  // The chat title is usually the first span with dir="auto" inside the header
-  // or a specific data-testid="conversation-info-header"
-  const titleEl = header.querySelector('span[dir="auto"], div[dir="auto"]');
-  const title = titleEl?.textContent?.trim() || "Unknown Contact";
+  // The chat title is usually the first span/div with dir="auto" in the header.
+  const dirNodes = Array.from(header.querySelectorAll('span[dir="auto"], div[dir="auto"]'));
+  const title = dirNodes[0]?.textContent?.trim() || "Unknown Contact";
+  // A secondary line (phone number / "click here for contact info" / member list)
+  // is used only to disambiguate two chats that happen to share a display name.
+  const subtitle = dirNodes[1]?.textContent?.trim() || "";
 
-  // Create a unique key for this chat using a hash of the title.
-  // (In a real app, we might parse the DOM more deeply to find phone numbers, but title is a good fallback).
-  const key = `wa_${btoa(unescape(encodeURIComponent(title))).replace(/=/g, "")}`;
+  // Internal-only key to prevent context leaking between chats. Not a real
+  // identifier — we never read phone numbers or session data.
+  const raw = `${title}|${subtitle}`;
+  const key = `wa_${btoa(unescape(encodeURIComponent(raw))).replace(/=/g, "")}`;
 
   return {
     key,
     title,
+    participantHint: subtitle || undefined,
     source: "dom",
-    confidence: 0.8, // Title-based identity
+    confidence: subtitle ? 0.85 : 0.7,
   };
 }
 

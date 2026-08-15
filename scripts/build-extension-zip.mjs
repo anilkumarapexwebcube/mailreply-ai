@@ -2,7 +2,7 @@
  * Builds public/mailreply-ai-extension.zip with the production Vercel URL injected.
  * Run: node scripts/build-extension-zip.mjs
  */
-import { readFileSync, readdirSync, statSync, writeFileSync, copyFileSync } from 'node:fs';
+import { readFileSync, readdirSync, statSync, writeFileSync, copyFileSync, rmSync, mkdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execSync } from 'node:child_process';
@@ -13,17 +13,22 @@ const extDir = join(root, 'extension');
 const distDir = join(root, 'extension', 'dist');
 const API_BASE = 'https://mailreplyai.vercel.app';
 
-// 1. Run Vite build for extension JS files
+// 1. Build each entry as a self-contained IIFE (no shared ESM chunks, which
+//    classic content/service-worker/popup scripts cannot load).
 console.log('Building extension scripts with Vite...');
-try {
-  execSync('npx vite build -c vite.config.extension.ts', {
-    stdio: 'inherit',
-    cwd: root,
-    env: { ...process.env, MAILREPLY_API_BASE: API_BASE }
-  });
-} catch (error) {
-  console.error('Vite build failed!');
-  process.exit(1);
+rmSync(distDir, { recursive: true, force: true });
+mkdirSync(distDir, { recursive: true });
+for (const entry of ['background', 'content', 'popup']) {
+  try {
+    execSync('npx vite build -c vite.config.extension.ts', {
+      stdio: 'inherit',
+      cwd: root,
+      env: { ...process.env, MAILREPLY_API_BASE: API_BASE, EXT_ENTRY: entry },
+    });
+  } catch (error) {
+    console.error(`Vite build failed for entry "${entry}"!`);
+    process.exit(1);
+  }
 }
 
 // 2. Copy static files to dist/

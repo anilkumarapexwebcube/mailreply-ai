@@ -1,18 +1,29 @@
 import { GmailAdapter } from "./platforms/gmail/adapter";
 import { WhatsAppAdapter } from "./platforms/whatsapp/adapter";
+import { loadSettings, isPlatformEnabled } from "./shared/settings";
 
-function boot() {
+async function boot() {
   const hostname = window.location.hostname;
+  let settings;
+  try {
+    settings = await loadSettings();
+  } catch (err) {
+    console.warn("[MailReply AI] Could not load settings; using defaults.", err);
+    return;
+  }
 
-  if (hostname === "mail.google.com") {
-    console.log("[MailReply AI] Booting Gmail Adapter");
-    const adapter = new GmailAdapter();
-    adapter.init();
-  } else if (hostname === "web.whatsapp.com") {
-    console.log("[MailReply AI] Booting WhatsApp Adapter");
-    const adapter = new WhatsAppAdapter();
-    adapter.init();
+  try {
+    if (hostname === "mail.google.com") {
+      if (!isPlatformEnabled(settings, "gmail")) return;
+      new GmailAdapter(settings).init();
+    } else if (hostname === "web.whatsapp.com") {
+      if (!isPlatformEnabled(settings, "whatsapp")) return;
+      new WhatsAppAdapter(settings).init();
+    }
+  } catch (err) {
+    // Fail-safe: never let the assistant break the host page.
+    console.warn("[MailReply AI] Adapter failed to boot.", err);
   }
 }
 
-boot();
+void boot();

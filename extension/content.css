@@ -197,3 +197,100 @@
   font-size: 12px;
   color: #b91c1c;
 }
+
+/* Save-instruction checkbox */
+.mrai-check {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 8px 0 2px;
+  font-size: 12px;
+  color: #8a7868;
+  text-transform: none;
+  letter-spacing: 0;
+  cursor: pointer;
+}
+.mrai-check input {
+  width: auto;
+  margin: 0;
+}
+
+/* Stop state on the primary button */
+.mrai-primary.mrai-stop {
+  background: #b91c1c;
+}
+
+/* Quick actions / chips */
+.mrai-quick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 12px;
+}
+.mrai-chip {
+  border: 1px solid #e2d6c6;
+  background: #fff;
+  color: #2b2018;
+  border-radius: 999px;
+  padding: 5px 11px;
+  font: 500 12px/1 inherit;
+  cursor: pointer;
+}
+.mrai-chip:hover {
+  background: #f5f0e6;
+}
+.mrai-confirm {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+/* WhatsApp dark-mode-friendly theme via CSS variables */
+.mrai-whatsapp-theme {
+  --mrai-bg: #ffffff;
+  --mrai-text: #111b21;
+  --mrai-border: #e9edef;
+  --mrai-muted: #667781;
+  --mrai-accent: #25d366;
+  background: var(--mrai-bg);
+  color: var(--mrai-text);
+  border-color: var(--mrai-border);
+}
+.mrai-whatsapp-theme .mrai-primary {
+  background: var(--mrai-accent);
+  color: #0b141a;
+}
+.mrai-whatsapp-theme .mrai-primary.mrai-stop {
+  background: #b91c1c;
+  color: #fff;
+}
+@media (prefers-color-scheme: dark) {
+  .mrai-whatsapp-theme {
+    --mrai-bg: #233138;
+    --mrai-text: #e9edef;
+    --mrai-border: #2f3b43;
+    --mrai-muted: #8696a0;
+  }
+  .mrai-whatsapp-theme .mrai-head {
+    border-bottom-color: var(--mrai-border);
+  }
+  .mrai-whatsapp-theme textarea,
+  .mrai-whatsapp-theme .mrai-select-trigger,
+  .mrai-whatsapp-theme .mrai-select-menu,
+  .mrai-whatsapp-theme .mrai-draft,
+  .mrai-whatsapp-theme .mrai-chip {
+    background: #2a3942;
+    color: var(--mrai-text);
+    border-color: var(--mrai-border);
+  }
+  .mrai-whatsapp-theme .mrai-label,
+  .mrai-whatsapp-theme .mrai-note,
+  .mrai-whatsapp-theme .mrai-check {
+    color: var(--mrai-muted);
+  }
+  .mrai-whatsapp-theme .mrai-secondary {
+    background: #2a3942;
+    color: var(--mrai-text);
+    border-color: var(--mrai-border);
+  }
+}

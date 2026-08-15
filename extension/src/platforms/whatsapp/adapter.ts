@@ -1,4 +1,4 @@
-import { AssistantPanel } from "../../ui/panel";
+import { AssistantPanel, type GenerateParams } from "../../ui/panel";
 import type {
   PlatformType,
   ConversationPlatform,
@@ -11,8 +11,13 @@ import { detectActiveConversation } from "./detector";
 import { getConversation } from "./conversation";
 import { getActiveComposer, insertReply } from "./composer";
 import { generateReplyFromAPI } from "../../shared/api";
+import {
+  addSavedInstruction,
+  getPlatformDefaults,
+  saveSettings,
+  type MailReplySettings,
+} from "../../shared/settings";
 
-/** Simple debounce helper (no lodash dependency needed in extension) */
 function debounce(fn: () => void, ms: number): () => void {
   let timer: ReturnType<typeof setTimeout> | null = null;
   return () => {
@@ -24,16 +29,15 @@ function debounce(fn: () => void, ms: number): () => void {
   };
 }
 
+const CLIENT_MESSAGE_CAP = 20; // backend trims further; this bounds payload size
+
 export class WhatsAppAdapter implements ConversationPlatform {
   public readonly type: PlatformType = "whatsapp";
   private observer: MutationObserver | null = null;
   private currentChatKey: string | null = null;
   private debouncedHandleChanges: () => void;
-  // Track active generation to support race-condition protection
-  private activeGenerationId: string | null = null;
 
-  constructor() {
-    // Debounce DOM handler to 400ms to avoid hammering on every tiny mutation
+  constructor(private settings: MailReplySettings) {
     this.debouncedHandleChanges = debounce(() => this.handleDOMChanges(), 400);
   }
 
@@ -62,101 +66,103 @@ export class WhatsAppAdapter implements ConversationPlatform {
   }
 
   public init() {
-    // Use a debounced observer to avoid performance issues on frequent DOM mutations
-    this.observer = new MutationObserver(this.debouncedHandleChanges);
+    const safe = (fn: () => void) => {
+      try {
+        fn();
+      } catch (err) {
+        console.warn("[MailReply AI] WhatsApp mount skipped:", err);
+      }
+    };
+    this.observer = new MutationObserver(() => safe(this.debouncedHandleChanges));
     this.observer.observe(document.body, { childList: true, subtree: true });
-
-    // Initial check after page is settled
-    setTimeout(() => this.handleDOMChanges(), 2500);
+    setTimeout(() => safe(() => this.handleDOMChanges()), 2500);
   }
 
   private async handleDOMChanges() {
     const detection = await this.detectActiveConversation();
-
     if (detection.active && detection.identity) {
       if (this.currentChatKey !== detection.identity.key) {
-        // Chat switched — cancel any running generation and remove old button
         this.currentChatKey = detection.identity.key;
-        this.activeGenerationId = null;
-        // Remove any stale button from old chat header (will get remounted)
         document.querySelectorAll(".mrai-wa-btn").forEach((el) => el.remove());
+        // Any open panel belongs to the previous chat — close it to avoid mixing context.
+        document.querySelectorAll(".mrai-panel").forEach((el) => el.remove());
       }
       this.mountReplyButton();
-    } else {
-      if (this.currentChatKey !== null) {
-        // Chat closed — clean up
-        this.currentChatKey = null;
-        this.activeGenerationId = null;
-        document.querySelectorAll(".mrai-wa-btn").forEach((el) => el.remove());
-      }
+    } else if (this.currentChatKey !== null) {
+      this.currentChatKey = null;
+      document.querySelectorAll(".mrai-wa-btn").forEach((el) => el.remove());
+      document.querySelectorAll(".mrai-panel").forEach((el) => el.remove());
     }
   }
 
-  private async generateReply(
-    generationId: string,
-    instruction: string,
-    tone: string,
-    length: string
-  ): Promise<string> {
+  private async generateReply(params: GenerateParams, signal: AbortSignal): Promise<string> {
+    const startKey = this.currentChatKey;
     const context = await this.getConversation();
 
-    // Race-condition check: if chat changed since generation started, abort
-    if (this.activeGenerationId !== generationId) {
-      throw new Error("Chat changed during generation. Please try again.");
+    // Race check: chat switched between opening the panel and reading messages.
+    if (this.currentChatKey !== startKey) {
+      throw new Error("The chat changed while generating. Please try again.");
     }
 
-    try {
-      const draft = await generateReplyFromAPI({
+    const trimmed: ConversationContext = {
+      ...context,
+      messages: context.messages.slice(-CLIENT_MESSAGE_CAP),
+    };
+
+    const draft = await generateReplyFromAPI(
+      {
         platform: this.type,
-        conversation: context,
-        instructions: { instruction, tone, length },
-      });
-      
-      // Check again after async response
-      if (this.activeGenerationId !== generationId) {
-        throw new Error("Chat changed during generation. Please try again.");
-      }
-      return draft;
-    } catch (error) {
-      // Check again after async response
-      if (this.activeGenerationId !== generationId) {
-        throw new Error("Chat changed during generation. Please try again.");
-      }
-      throw error;
+        conversation: trimmed,
+        instruction: params.previousDraft
+          ? `${params.instruction}\n\nCURRENT DRAFT:\n${params.previousDraft}`
+          : params.instruction,
+        tone: params.tone,
+        length: params.length,
+        language: params.language,
+        objective: params.objective,
+        emoji: params.emoji,
+      },
+      signal,
+    );
+
+    // Race check again after the network round-trip.
+    if (this.currentChatKey !== startKey) {
+      throw new Error("The chat changed while generating. Please try again.");
     }
+    return draft;
   }
 
-  private async handleInsertReply(text: string) {
+  private async handleInsert(text: string, mode: "replace" | "insert-below") {
     const composer = await this.getActiveComposer();
     if (!composer) {
-      // Show error in the panel area instead of blocking alert()
       throw new Error(
-        "Could not find the WhatsApp composer. Please click on the message input box first and try again."
+        "Could not find the WhatsApp composer. Click the message input box first, then try again.",
       );
     }
-
-    let mode: InsertMode = "replace";
-    if (composer.hasExistingText) {
-      // Use the panel's inline confirmation instead of blocking confirm()
-      mode = "insert-below"; // Safe default — append below existing text
-    }
-
     await this.insertReply(composer, text, mode);
   }
 
-  private openPanel() {
-    // Create a fresh generationId for this session to track race conditions
-    const generationId = `gen_${Date.now()}`;
-    this.activeGenerationId = generationId;
+  private async persistInstruction(instruction: string) {
+    this.settings.savedInstructions = addSavedInstruction(this.settings.savedInstructions, instruction);
+    await saveSettings(this.settings);
+  }
 
+  private openPanel() {
+    const d = getPlatformDefaults(this.settings, "whatsapp");
     const panel = new AssistantPanel({
       mode: "reply",
       platform: this.type,
-      onGenerate: (instruction, tone, length) =>
-        this.generateReply(generationId, instruction, tone, length),
-      onInsert: async (text) => {
-        await this.handleInsertReply(text);
+      defaults: { ...d, instruction: this.settings.defaultInstruction },
+      savedInstructions: this.settings.savedInstructions,
+      onGenerate: (params, signal) => this.generateReply(params, signal),
+      onInsert: async (text, mode) => {
+        await this.handleInsert(text, mode);
       },
+      hasExistingComposerText: async () => {
+        const composer = await this.getActiveComposer();
+        return Boolean(composer?.hasExistingText);
+      },
+      onSaveInstruction: (instruction) => this.persistInstruction(instruction),
     });
     panel.open();
   }
@@ -164,17 +170,12 @@ export class WhatsAppAdapter implements ConversationPlatform {
   private mountReplyButton() {
     const main = document.querySelector("div#main");
     if (!main) return;
-
     const header = main.querySelector("header");
     if (!header || header.querySelector(".mrai-wa-btn")) return;
 
-    // Try multiple selectors for the action container in WhatsApp header
-    // WhatsApp updates UI frequently so we try several fallbacks
     const actionContainer =
       header.querySelector('[data-testid="conversation-header-actions"]') ||
-      header.querySelector("div.tvfksri0") ||
       header.querySelector('div[style*="justify-content: flex-end"]') ||
-      // Last resort: inject at the end of the header itself
       header;
 
     const button = document.createElement("button");
@@ -183,15 +184,13 @@ export class WhatsAppAdapter implements ConversationPlatform {
     button.setAttribute("aria-label", "Generate AI reply");
     button.title = "Generate a reply based on the visible conversation";
     button.textContent = "✦ AI Reply";
-
-    // Inline styles for WhatsApp header integration (light + dark mode safe)
     button.style.cssText = [
       "margin: 0 8px",
       "padding: 6px 14px",
       "border-radius: 20px",
       "border: none",
       "background: #25D366",
-      "color: white",
+      "color: #0b141a",
       "font-size: 13px",
       "font-weight: 600",
       "cursor: pointer",
@@ -205,7 +204,6 @@ export class WhatsAppAdapter implements ConversationPlatform {
       this.openPanel();
     });
 
-    // Prepend so button appears on the left side of action icons
     actionContainer.prepend(button);
   }
 }

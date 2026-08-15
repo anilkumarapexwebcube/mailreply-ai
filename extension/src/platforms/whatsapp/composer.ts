@@ -1,60 +1,84 @@
 import type { ComposerHandle, InsertMode } from "../../shared/types";
 
-export async function getActiveComposer(): Promise<ComposerHandle | null> {
+/**
+ * Finds the active WhatsApp message composer. WhatsApp changes its DOM often,
+ * so we try several resilient selectors, preferring the one inside the footer
+ * of the currently open chat (#main).
+ */
+function findComposerElement(): HTMLElement | null {
   const main = document.querySelector("div#main");
   if (!main) return null;
 
-  // The WhatsApp composer is a contenteditable div usually with title="Type a message" or role="textbox"
-  // Let's use multiple fallback selectors
-  const composerBox = 
-    main.querySelector('div[contenteditable="true"][data-testid="conversation-compose-box-input"]') ||
-    main.querySelector('div[contenteditable="true"][title="Type a message"]') ||
-    main.querySelector('div[contenteditable="true"][data-lexical-editor="true"]') ||
-    main.querySelector('footer div[contenteditable="true"]');
+  const candidates = [
+    // Current WhatsApp: Lexical editor in the footer, labelled "Type a message"
+    'footer div[contenteditable="true"][role="textbox"]',
+    'footer div[contenteditable="true"][data-lexical-editor="true"]',
+    'div[contenteditable="true"][aria-label="Type a message"]',
+    'div[contenteditable="true"][aria-label*="message" i]',
+    // Legacy fallbacks
+    'div[contenteditable="true"][data-testid="conversation-compose-box-input"]',
+    'div[contenteditable="true"][title="Type a message"]',
+    'footer div[contenteditable="true"]',
+  ];
 
-  if (!composerBox) return null;
-  
-  const el = composerBox as HTMLElement;
+  for (const sel of candidates) {
+    const el = main.querySelector(sel) as HTMLElement | null;
+    if (el && el.offsetParent !== null) return el; // visible only
+  }
+  return null;
+}
+
+export async function getActiveComposer(): Promise<ComposerHandle | null> {
+  const el = findComposerElement();
+  if (!el) return null;
+
+  const readText = () => (el.innerText ?? el.textContent ?? "").replace(/​/g, "").trim();
 
   return {
     id: "whatsapp_composer",
     platform: "whatsapp",
     element: el,
-    hasExistingText: el.textContent?.trim() !== "",
-    getText: () => el.textContent || "",
+    hasExistingText: readText().length > 0,
+    getText: () => readText(),
   };
 }
 
 export async function insertReply(
   composer: ComposerHandle,
   text: string,
-  mode: InsertMode = "replace"
+  mode: InsertMode = "replace",
 ): Promise<void> {
   if (!composer.element) return;
   const el = composer.element;
-
   el.focus();
 
-  // Build the final text to insert based on mode
   let finalText = text;
   if (mode === "insert-below" && composer.hasExistingText) {
-    const existing = composer.getText().trimEnd();
-    finalText = `${existing}\n\n${text}`;
+    finalText = `${composer.getText().trimEnd()}\n\n${text}`;
   } else if (mode === "append" && composer.hasExistingText) {
-    const existing = composer.getText().trimEnd();
-    finalText = `${existing} ${text}`;
+    finalText = `${composer.getText().trimEnd()} ${text}`;
   }
 
-  // Select all existing content first so the execCommand replaces it cleanly
+  // Replace the whole content: select all, then insert via execCommand so
+  // WhatsApp's Lexical/React state updates (a plain textContent assignment is
+  // ignored by the editor).
   const selection = window.getSelection();
   const range = document.createRange();
   range.selectNodeContents(el);
   selection?.removeAllRanges();
   selection?.addRange(range);
 
-  // insertText via execCommand is the only way to update WhatsApp's Lexical/React state
-  document.execCommand("insertText", false, finalText);
+  // Insert line-by-line so newlines become real soft line breaks instead of
+  // being swallowed (a bare "\n" in insertText is unreliable in Lexical).
+  const lines = finalText.split("\n");
+  document.execCommand("insertText", false, lines[0] ?? "");
+  for (let i = 1; i < lines.length; i++) {
+    // Shift+Enter — WhatsApp's newline without sending.
+    el.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "Enter", shiftKey: true, bubbles: true, cancelable: true }),
+    );
+    document.execCommand("insertText", false, lines[i] ?? "");
+  }
 
-  // Dispatch input event as additional safety net
   el.dispatchEvent(new InputEvent("input", { bubbles: true, cancelable: true }));
 }

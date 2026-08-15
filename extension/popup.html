@@ -4,26 +4,17 @@
     <meta charset="utf-8" />
     <title>MailReply AI</title>
     <style>
-      :root {
-        color-scheme: light;
-      }
+      :root { color-scheme: light; }
       body {
-        width: 320px;
+        width: 340px;
         margin: 0;
         padding: 18px;
         font: 400 13px/1.5 "Google Sans", Roboto, Arial, sans-serif;
         background: #fffdf9;
         color: #2b2018;
       }
-      h1 {
-        margin: 0 0 4px;
-        font-size: 16px;
-      }
-      p.sub {
-        margin: 0 0 16px;
-        color: #8a7868;
-        font-size: 12px;
-      }
+      h1 { margin: 0 0 4px; font-size: 16px; }
+      p.sub { margin: 0 0 14px; color: #8a7868; font-size: 12px; }
       label {
         display: block;
         margin-bottom: 6px;
@@ -32,7 +23,7 @@
         text-transform: uppercase;
         color: #8a7868;
       }
-      input {
+      input[type="password"], textarea {
         width: 100%;
         box-sizing: border-box;
         border: 1px solid #e2d6c6;
@@ -41,6 +32,19 @@
         font: inherit;
         background: #fff;
       }
+      textarea { min-height: 54px; resize: vertical; }
+      hr { border: none; border-top: 1px solid #efe6da; margin: 16px 0; }
+      .toggle {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 8px 0;
+        font-size: 13px;
+        text-transform: none;
+        letter-spacing: 0;
+        color: #2b2018;
+      }
+      .toggle input { width: auto; margin: 0; }
       button {
         width: 100%;
         margin-top: 10px;
@@ -52,32 +56,35 @@
         background: #c2410c;
         color: #fff;
       }
-      button.ghost {
-        background: #fff;
-        border-color: #e2d6c6;
-        color: #2b2018;
-      }
-      #state {
-        margin-top: 14px;
-        font-size: 12px;
-        color: #8a7868;
-      }
-      #state.ok {
-        color: #15803d;
-      }
-      #state.bad {
-        color: #b91c1c;
-      }
+      button.ghost { background: #fff; border-color: #e2d6c6; color: #2b2018; }
+      #state, #saveState { margin-top: 12px; font-size: 12px; color: #8a7868; }
+      .ok { color: #15803d !important; }
+      .bad { color: #b91c1c !important; }
     </style>
   </head>
   <body>
     <h1>MailReply AI</h1>
     <p class="sub">Paste the pairing key from your MailReply AI dashboard.</p>
+
     <label for="token">Pairing key</label>
     <input id="token" type="password" placeholder="mr_…" autocomplete="off" />
     <button id="save" type="button">Save &amp; check connection</button>
-    <button id="dashboard" class="ghost" type="button">Open dashboard</button>
     <div id="state">Not checked yet.</div>
+
+    <hr />
+    <label>Platforms</label>
+    <div class="toggle"><input type="checkbox" id="enable-gmail" /> Gmail</div>
+    <div class="toggle"><input type="checkbox" id="enable-whatsapp" /> WhatsApp Web</div>
+
+    <label for="default-instruction">Default instruction (optional)</label>
+    <textarea id="default-instruction" placeholder="e.g. Reply politely and keep it short."></textarea>
+
+    <button id="save-settings" class="ghost" type="button">Save settings</button>
+    <div id="saveState"></div>
+
+    <hr />
+    <button id="dashboard" class="ghost" type="button">Open dashboard</button>
+
     <script src="popup.js"></script>
   </body>
 </html>

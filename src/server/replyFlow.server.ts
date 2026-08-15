@@ -7,7 +7,13 @@ import {
   getProfile,
   type ConversationThread,
 } from "./gmail.server";
-import { generateReply, type ReplyLength, type Tone } from "./ai.server";
+import {
+  generateReply,
+  type EmojiUsage,
+  type ReplyLength,
+  type ReplyObjective,
+  type Tone,
+} from "./ai.server";
 
 const TONES: Tone[] = [
   "professional",
@@ -19,6 +25,16 @@ const TONES: Tone[] = [
   "apologetic",
 ];
 const LENGTHS: ReplyLength[] = ["short", "medium", "detailed"];
+const EMOJI: EmojiUsage[] = ["auto", "sparingly", "never"];
+const OBJECTIVES: ReplyObjective[] = [
+  "general",
+  "qualification",
+  "follow-up",
+  "meeting",
+  "requirements",
+  "pricing",
+  "re-engagement",
+];
 
 export class ReplyError extends Error {
   status: number;
@@ -38,6 +54,10 @@ export interface ReplyRequest {
   instruction?: string;
   tone?: string;
   length?: string;
+  language?: string;
+  objective?: string;
+  emoji?: string;
+  readFullChat?: boolean;
   signal?: AbortSignal;
 }
 
@@ -58,6 +78,13 @@ export async function generateReplyForUser(userId: string, input: ReplyRequest) 
   const length: ReplyLength = LENGTHS.includes(input.length as ReplyLength)
     ? (input.length as ReplyLength)
     : "medium";
+  const emoji: EmojiUsage = EMOJI.includes(input.emoji as EmojiUsage)
+    ? (input.emoji as EmojiUsage)
+    : "auto";
+  const objective: ReplyObjective = OBJECTIVES.includes(input.objective as ReplyObjective)
+    ? (input.objective as ReplyObjective)
+    : "general";
+  const language = (input.language ?? "auto").slice(0, 40);
   const instruction = (input.instruction ?? "").slice(0, 1500);
 
   let thread: ConversationThread | null = null;
@@ -123,7 +150,11 @@ export async function generateReplyForUser(userId: string, input: ReplyRequest) 
     instruction,
     tone,
     length,
+    language,
+    objective,
+    emoji,
     composeMode: isComposeMode,
+    ...(input.readFullChat !== undefined ? { readFullChat: input.readFullChat } : {}),
     ...(input.signal ? { signal: input.signal } : {}),
   });
 
