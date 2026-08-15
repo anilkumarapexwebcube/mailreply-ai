@@ -28,6 +28,7 @@ export interface PanelOptions {
   hasExistingComposerText: () => Promise<boolean>;
   /** Persist an instruction the user wants to reuse later. */
   onSaveInstruction?: (instruction: string) => Promise<void> | void;
+  onClose?: () => void;
 }
 
 const TONES = [
@@ -86,6 +87,7 @@ export class AssistantPanel {
   private lastDraft = "";
   private abortController: AbortController | null = null;
   private globalClickHandler: (() => void) | null = null;
+  private minimized = false;
 
   constructor(private options: PanelOptions) {
     const d = options.defaults;
@@ -113,8 +115,23 @@ export class AssistantPanel {
       </div>`;
   }
 
+  public restore() {
+    if (!this.panel) return;
+    this.minimized = false;
+    this.panel.classList.remove("mrai-minimized");
+    const title = this.q<HTMLElement>(".mrai-head-title");
+    if (title) title.hidden = false;
+    this.q<HTMLButtonElement>(".mrai-minimize")!.hidden = false;
+    this.q<HTMLButtonElement>(".mrai-maximize")!.hidden = true;
+    this.q<HTMLButtonElement>(".mrai-mini-toggle")!.hidden = true;
+    this.panel.setAttribute("aria-expanded", "true");
+  }
+
   public open() {
-    this.destroy();
+    if (this.panel) {
+      this.restore();
+      return;
+    }
 
     const { mode, platform, defaults, savedInstructions } = this.options;
     const isCompose = mode === "compose";
@@ -154,8 +171,13 @@ export class AssistantPanel {
 
     this.panel.innerHTML = `
       <div class="mrai-head">
-        <span>MailReply AI${isCompose ? " · Compose" : ""}${isWhatsApp ? " · WhatsApp" : ""}</span>
-        <button class="mrai-close" type="button" aria-label="Close panel">×</button>
+        <span class="mrai-head-title">MailReply AI${isCompose ? " · Compose" : ""}${isWhatsApp ? " · WhatsApp" : ""}</span>
+        <button class="mrai-mini-toggle mrai-btn" type="button" aria-label="Restore panel" hidden>✦ AI Reply</button>
+        <div class="mrai-head-actions">
+          <button class="mrai-maximize" type="button" aria-label="Maximize panel" hidden>▢</button>
+          <button class="mrai-minimize" type="button" aria-label="Minimize panel">—</button>
+          <button class="mrai-close" type="button" aria-label="Close panel">×</button>
+        </div>
       </div>
       <div class="mrai-body">
         ${savedHtml}
@@ -201,6 +223,7 @@ export class AssistantPanel {
       this.panel.remove();
       this.panel = null;
     }
+    this.options.onClose?.();
   }
 
   private q<T extends HTMLElement>(sel: string): T | null {
@@ -216,8 +239,25 @@ export class AssistantPanel {
     const insertBtn = this.q<HTMLButtonElement>("#mrai-insert")!;
     const quickBox = this.q<HTMLElement>("#mrai-quick")!;
     const instructionEl = this.q<HTMLTextAreaElement>("#mrai-instruction")!;
+    const minimizeBtn = this.q<HTMLButtonElement>(".mrai-minimize")!;
+    const maximizeBtn = this.q<HTMLButtonElement>(".mrai-maximize")!;
+    const miniToggle = this.q<HTMLButtonElement>(".mrai-mini-toggle")!;
+
+    const setMinimized = (next: boolean) => {
+      this.minimized = next;
+      this.panel?.classList.toggle("mrai-minimized", next);
+      const title = this.q<HTMLElement>(".mrai-head-title");
+      if (title) title.hidden = next;
+      minimizeBtn.hidden = next;
+      maximizeBtn.hidden = !next;
+      miniToggle.hidden = !next;
+      this.panel?.setAttribute("aria-expanded", String(!next));
+    };
 
     this.q<HTMLButtonElement>(".mrai-close")!.addEventListener("click", () => this.destroy());
+    minimizeBtn.addEventListener("click", () => setMinimized(true));
+    maximizeBtn.addEventListener("click", () => setMinimized(false));
+    miniToggle.addEventListener("click", () => setMinimized(false));
     this.panel.addEventListener("keydown", (e) => {
       if ((e as KeyboardEvent).key === "Escape") this.destroy();
     });

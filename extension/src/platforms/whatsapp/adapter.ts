@@ -35,6 +35,7 @@ export class WhatsAppAdapter implements ConversationPlatform {
   public readonly type: PlatformType = "whatsapp";
   private observer: MutationObserver | null = null;
   private currentChatKey: string | null = null;
+  private activePanel: AssistantPanel | null = null;
   private debouncedHandleChanges: () => void;
 
   constructor(private settings: MailReplySettings) {
@@ -148,6 +149,11 @@ export class WhatsAppAdapter implements ConversationPlatform {
   }
 
   private openPanel() {
+    if (this.activePanel) {
+      this.activePanel.restore();
+      return;
+    }
+
     const d = getPlatformDefaults(this.settings, "whatsapp");
     const panel = new AssistantPanel({
       mode: "reply",
@@ -163,7 +169,11 @@ export class WhatsAppAdapter implements ConversationPlatform {
         return Boolean(composer?.hasExistingText);
       },
       onSaveInstruction: (instruction) => this.persistInstruction(instruction),
+      onClose: () => {
+        if (this.activePanel === panel) this.activePanel = null;
+      },
     });
+    this.activePanel = panel;
     panel.open();
   }
 

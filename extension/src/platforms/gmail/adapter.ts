@@ -11,6 +11,7 @@ import {
 export class GmailAdapter {
   private platform: PlatformType = "gmail";
   private observer: MutationObserver | null = null;
+  private activePanel: AssistantPanel | null = null;
 
   constructor(private settings: MailReplySettings) {}
 
@@ -171,6 +172,11 @@ export class GmailAdapter {
   }
 
   private openPanel(mode: "reply" | "compose") {
+    if (this.activePanel) {
+      this.activePanel.restore();
+      return;
+    }
+
     const d = getPlatformDefaults(this.settings, "gmail");
     const panel = new AssistantPanel({
       mode,
@@ -183,7 +189,11 @@ export class GmailAdapter {
       },
       hasExistingComposerText: async () => this.hasExistingComposerText(),
       onSaveInstruction: (instruction) => this.persistInstruction(instruction),
+      onClose: () => {
+        if (this.activePanel === panel) this.activePanel = null;
+      },
     });
+    this.activePanel = panel;
     panel.open();
   }
 
