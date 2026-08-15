@@ -68,31 +68,16 @@
   padding: 0;
   cursor: pointer;
   color: #7a6a5c;
-}
-.mrai-head svg {
-  width: 14px;
-  height: 14px;
-  display: block;
-  stroke: currentColor;
-  fill: none;
-  stroke-width: 1.8;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-.mrai-mini-toggle svg {
-  width: 12px;
-  height: 12px;
+  font: 600 12px/1 inherit;
 }
 .mrai-close {
   border: 0;
   width: auto;
   height: auto;
   background: transparent;
+  font-size: 18px;
+  line-height: 1;
   padding: 0 2px;
-}
-.mrai-close svg {
-  width: 16px;
-  height: 16px;
 }
 .mrai-mini-toggle {
   display: none;
@@ -100,9 +85,6 @@
   padding: 7px 12px;
   border-radius: 999px;
   box-shadow: none;
-  gap: 6px;
-  font: 500 12px/1 inherit;
-  color: #fff;
 }
 .mrai-body {
   padding: 14px 16px 16px;
