@@ -172,11 +172,20 @@ export class AssistantPanel {
     this.panel.innerHTML = `
       <div class="mrai-head">
         <span class="mrai-head-title">MailReply AI${isCompose ? " · Compose" : ""}${isWhatsApp ? " · WhatsApp" : ""}</span>
-        <button class="mrai-mini-toggle mrai-btn" type="button" aria-label="Restore panel" hidden>✦ AI Reply</button>
+        <button class="mrai-mini-toggle mrai-btn" type="button" aria-label="Restore panel" hidden>
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 2.75a9.25 9.25 0 1 1 0 18.5a9.25 9.25 0 0 1 0-18.5Zm0 1.5a7.75 7.75 0 1 0 0 15.5a7.75 7.75 0 0 0 0-15.5Zm-1.13 3.87h4.96v1.5H10.87V8.12Zm-1.12 3.5h6.25v1.5H9.75v-1.5Z"/></svg>
+          <span>AI Reply</span>
+        </button>
         <div class="mrai-head-actions">
-          <button class="mrai-maximize" type="button" aria-label="Maximize panel" hidden>▢</button>
-          <button class="mrai-minimize" type="button" aria-label="Minimize panel">—</button>
-          <button class="mrai-close" type="button" aria-label="Close panel">×</button>
+          <button class="mrai-maximize" type="button" aria-label="Maximize panel" hidden>
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 6.75h12a1.25 1.25 0 0 1 1.25 1.25v8.25A1.25 1.25 0 0 1 18 17.5H6A1.25 1.25 0 0 1 4.75 16.25V8A1.25 1.25 0 0 1 6 6.75Zm1.25 1.5v7.5h9.5v-7.5h-9.5Z"/></svg>
+          </button>
+          <button class="mrai-minimize" type="button" aria-label="Minimize panel">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 12.5h12v1.5H6z"/></svg>
+          </button>
+          <button class="mrai-close" type="button" aria-label="Close panel">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6.4 6.4l11.2 11.2m0-11.2L6.4 17.6"/></svg>
+          </button>
         </div>
       </div>
       <div class="mrai-body">
