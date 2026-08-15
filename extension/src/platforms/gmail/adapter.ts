@@ -26,6 +26,21 @@ export class GmailAdapter {
   }
 
   private threadIdFromUrl(): string {
+    // Most reliable: Gmail injects data-legacy-thread-id on the thread container
+    const threadEl = document.querySelector("[data-legacy-thread-id]");
+    if (threadEl) {
+      const id = threadEl.getAttribute("data-legacy-thread-id");
+      if (id && id.length >= 10) return id;
+    }
+
+    // Also check data-thread-perm-id attribute
+    const permEl = document.querySelector("[data-thread-perm-id]");
+    if (permEl) {
+      const id = permEl.getAttribute("data-thread-perm-id");
+      if (id && id.length >= 10) return id;
+    }
+
+    // Fallback: extract from URL hash
     const full = window.location.href;
     const hashMatch = full.match(/#(?:[^/]+\/)*([A-Za-z0-9]{10,})\/?$/);
     if (hashMatch) return hashMatch[1];

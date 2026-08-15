@@ -2,23 +2,39 @@
  * Builds public/mailreply-ai-extension.zip with the production Vercel URL injected.
  * Run: node scripts/build-extension-zip.mjs
  */
-import { readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { readFileSync, readdirSync, statSync, writeFileSync, copyFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { execSync } from 'node:child_process';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = join(__dirname, '..');
 const extDir = join(root, 'extension');
-<<<<<<< HEAD
 const distDir = join(root, 'extension', 'dist');
-
-// Use VERCEL_URL if available (for preview deployments), otherwise fallback to production URL
-const API_BASE = process.env.VERCEL_URL 
-  ? `https://${process.env.VERCEL_URL}` 
-  : 'https://mailreplyai.vercel.app';
-=======
 const API_BASE = 'https://mailreplyai.vercel.app';
->>>>>>> parent of bacd170 (Merge pull request #1 from anilkumarapexwebcube/testing)
+
+// 1. Run Vite build for extension JS files
+console.log('Building extension scripts with Vite...');
+try {
+  execSync('npx vite build -c vite.config.extension.ts', {
+    stdio: 'inherit',
+    cwd: root,
+    env: { ...process.env, MAILREPLY_API_BASE: API_BASE }
+  });
+} catch (error) {
+  console.error('Vite build failed!');
+  process.exit(1);
+}
+
+// 2. Copy static files to dist/
+const staticFiles = ['manifest.json', 'popup.html', 'content.css', 'icon.png'];
+for (const file of staticFiles) {
+  try {
+    copyFileSync(join(extDir, file), join(distDir, file));
+  } catch (e) {
+    console.warn(`Could not copy ${file}:`, e.message);
+  }
+}
 
 function u16le(n) { const b = Buffer.alloc(2); b.writeUInt16LE(n, 0); return b; }
 function u32le(n) { const b = Buffer.alloc(4); b.writeUInt32LE(n, 0); return b; }
@@ -83,25 +99,18 @@ function buildZip(files) {
   return Buffer.concat([...localParts, ...centralParts, eocd]);
 }
 
-const fileNames = readdirSync(extDir);
+const fileNames = readdirSync(distDir).filter((name) => {
+  const fullPath = join(distDir, name);
+  return statSync(fullPath).isFile();
+});
 const files = [];
 
 for (const name of fileNames) {
-  let data = readFileSync(join(extDir, name));
-
-  if (name === 'background.js' || name === 'config.js') {
-    const text = data
-      .toString('utf8')
-      .replace(
-        /const MAILREPLY_API_BASE\s*=\s*["'][^"']*["']/g,
-        `const MAILREPLY_API_BASE = "${API_BASE}"`,
-      );
-    data = Buffer.from(text, 'utf8');
-  }
+  let data = readFileSync(join(distDir, name));
 
   if (name === 'manifest.json') {
     const manifest = JSON.parse(data.toString('utf8'));
-    manifest.host_permissions = [`${API_BASE}/*`];
+    manifest.host_permissions = [`${API_BASE}/*`, 'https://web.whatsapp.com/*'];
     data = Buffer.from(JSON.stringify(manifest, null, 2), 'utf8');
   }
 

@@ -109,12 +109,17 @@ export async function generateReplyForUser(userId: string, input: ReplyRequest) 
   // ── Compose mode: no thread available — generate a fresh email ──
   const isComposeMode = !isWhatsApp && !thread;
 
+  // Extract a clean display name — never use email prefix as name
+  // e.g. anilkumar.apexweb.cube@gmail.com -> DO NOT use "anilkumar.apexweb.cube"
+  // Instead leave it null so AI uses a generic sign-off
+  const userName: string | null = null;
+
   const draft = await generateReply({
     platform: input.platform || "gmail",
     conversation: input.conversation,
     thread: isComposeMode ? null : thread,
     userEmail,
-    userName: userEmail ? (userEmail.split("@")[0] ?? null) : null,
+    userName,
     instruction,
     tone,
     length,
