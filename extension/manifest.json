@@ -1,13 +1,10 @@
 {
   "manifest_version": 3,
   "name": "MailReply AI",
-  "version": "1.0.1",
-  "description": "Draft Gmail and WhatsApp replies with AI in one click, in your own voice. You always review before sending.",
-  "permissions": ["storage", "tabs"],
-  "host_permissions": [
-    "https://mailreplyai.vercel.app/*",
-    "http://localhost:3000/*"
-  ],
+  "version": "1.0.0",
+  "description": "Draft Gmail replies with AI in one click, in your own voice. You always review before sending.",
+  "permissions": ["storage"],
+  "host_permissions": ["http://localhost:3000/*", "https://*.your-domain.com/*"],
   "action": {
     "default_popup": "popup.html",
     "default_icon": { "48": "icon.png", "128": "icon.png" }
@@ -17,12 +14,6 @@
   "content_scripts": [
     {
       "matches": ["https://mail.google.com/*"],
-      "js": ["content.js"],
-      "css": ["content.css"],
-      "run_at": "document_idle"
-    },
-    {
-      "matches": ["https://web.whatsapp.com/*"],
       "js": ["content.js"],
       "css": ["content.css"],
       "run_at": "document_idle"

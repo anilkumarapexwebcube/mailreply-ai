@@ -1,4 +1,4 @@
-const MAILREPLY_API_BASE = process.env.MAILREPLY_API_BASE || "http://localhost:3000";
+const MAILREPLY_API_BASE = "http://localhost:3000";
 
 async function getToken() {
   const { pairingToken } = await chrome.storage.local.get("pairingToken");
@@ -10,31 +10,18 @@ async function post(path, body) {
   if (!token) {
     return { ok: false, status: 401, data: { error: "Not paired. Open the MailReply AI popup and paste your pairing key." } };
   }
+  const res = await fetch(`${MAILREPLY_API_BASE}${path}`, {
+    method: "POST",
+    headers: { "content-type": "application/json", "x-mailreply-token": token },
+    body: JSON.stringify(body || {}),
+  });
   let data = {};
-  let status = 500;
-  let ok = false;
-  
   try {
-    const res = await fetch(`${MAILREPLY_API_BASE}${path}`, {
-      method: "POST",
-      headers: { "content-type": "application/json", "x-mailreply-token": token },
-      body: JSON.stringify(body || {}),
-    });
-    
-    ok = res.ok;
-    status = res.status;
-    
-    try {
-      data = await res.json();
-    } catch (_) {
-      data = { error: `Unexpected response (${status})` };
-    }
-  } catch (error) {
-    // Network error or fetch blocked
-    data = { error: `Network error: Could not connect to MailReply AI servers.` };
+    data = await res.json();
+  } catch (_) {
+    data = { error: `Unexpected response (${res.status})` };
   }
-  
-  return { ok, status, data };
+  return { ok: res.ok, status: res.status, data };
 }
 
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {

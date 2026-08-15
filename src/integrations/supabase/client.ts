@@ -4,14 +4,14 @@ import type { Database } from './types';
 // These are statically replaced by Vite at build time for the client bundle.
 // On the server side (SSR/Nitro), process.env is used instead.
 const SUPABASE_URL: string =
-  (typeof process !== 'undefined' && process.env['SUPABASE_URL'])
-    ? process.env['SUPABASE_URL']
-    : (import.meta.env['VITE_SUPABASE_URL'] as string);
+  (typeof process !== 'undefined' && process.env.SUPABASE_URL)
+    ? process.env.SUPABASE_URL
+    : (import.meta.env.VITE_SUPABASE_URL as string);
 
 const SUPABASE_PUBLISHABLE_KEY: string =
-  (typeof process !== 'undefined' && process.env['SUPABASE_PUBLISHABLE_KEY'])
-    ? process.env['SUPABASE_PUBLISHABLE_KEY']
-    : (import.meta.env['VITE_SUPABASE_PUBLISHABLE_KEY'] as string);
+  (typeof process !== 'undefined' && process.env.SUPABASE_PUBLISHABLE_KEY)
+    ? process.env.SUPABASE_PUBLISHABLE_KEY
+    : (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string);
 
 if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
   const missing = [
