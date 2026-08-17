@@ -17,7 +17,7 @@ import {
 export type { Tone, ReplyLength, EmojiUsage, ReplyObjective } from "./ai.prompts";
 
 const MODELS = {
-  groq: "llama-3.3-70b-versatile",
+  groq: "openai/gpt-oss-120b",
   gpt: "gpt-4o-mini",
   gemini: "gemini-2.0-flash",
   claude: "claude-3-5-sonnet-latest",
