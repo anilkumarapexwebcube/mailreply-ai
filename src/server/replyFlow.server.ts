@@ -60,6 +60,7 @@ export interface ConversationInput {
 
 export interface ReplyRequest {
   platform?: "gmail" | "whatsapp";
+  mode?: "reply" | "compose";
   conversation?: ConversationInput; // ConversationContext from extension
   threadId?: string;
   subject?: string;
@@ -109,10 +110,17 @@ export async function generateReplyForUser(
   const language = (input.language ?? "auto").slice(0, 40);
   const instruction = (input.instruction ?? "").slice(0, 1500);
 
+  // Compose mode is opt-in (the "AI Compose" button). For older clients that
+  // don't send a mode, treat "no threadId at all" as compose.
+  const wantsCompose =
+    !isWhatsApp &&
+    (input.mode === "compose" || (!input.mode && !input.threadId));
+
   let thread: ConversationThread | null = null;
   let userEmail: string | null = null;
+  let lastFetchError: unknown = null;
 
-  if (!isWhatsApp) {
+  if (!isWhatsApp && !wantsCompose) {
     try {
       userEmail = (await getProfile(refreshToken!)).emailAddress ?? null;
     } catch (error) {
@@ -133,6 +141,7 @@ export async function generateReplyForUser(
         thread = await fetchConversation(refreshToken!, candidate);
         break;
       } catch (error) {
+        lastFetchError = error;
         if (error instanceof GmailError && error.status === 403) {
           throw new ReplyError(
             "Gmail access was not granted with the required permissions. Reconnect Gmail in MailReply AI.",
@@ -148,15 +157,31 @@ export async function generateReplyForUser(
       if (found) {
         try {
           thread = await fetchConversation(refreshToken!, found);
-        } catch {
-          // Ignore — will fall back to compose mode
+        } catch (error) {
+          lastFetchError = error;
         }
       }
     }
+
+    // Reply mode REQUIRES the conversation. Never silently fall back to a
+    // generic composed email — that produces an off-topic reply. Fail clearly.
+    if (!thread) {
+      console.warn(
+        "[replyFlow] Reply requested but thread could not be read.",
+        lastFetchError instanceof Error
+          ? lastFetchError.message
+          : lastFetchError,
+      );
+      throw new ReplyError(
+        "We couldn't read this email conversation, so no reply was generated. Open the email fully and try again. If it keeps happening, reconnect Gmail in MailReply AI settings.",
+        422,
+        "thread_not_read",
+      );
+    }
   }
 
-  // ── Compose mode: no thread available — generate a fresh email ──
-  const isComposeMode = !isWhatsApp && !thread;
+  // ── Compose mode: no thread — generate a fresh email (explicit opt-in only) ──
+  const isComposeMode = wantsCompose;
 
   // Extract a clean display name — never use email prefix as name
   // e.g. anilkumar.apexweb.cube@gmail.com -> DO NOT use "anilkumar.apexweb.cube"

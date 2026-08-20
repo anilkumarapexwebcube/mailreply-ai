@@ -5,6 +5,7 @@ import { MAILREPLY_API_BASE } from "./config";
 
 export interface GenerateApiPayload {
   platform: "gmail" | "whatsapp";
+  mode?: "reply" | "compose";
   threadId?: string;
   subject?: string;
   conversation?: unknown;

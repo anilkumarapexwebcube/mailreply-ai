@@ -42,18 +42,23 @@ export class GmailAdapter {
   }
 
   private threadIdFromUrl(): string {
-    const threadEl = document.querySelector("[data-legacy-thread-id]");
-    if (threadEl) {
-      const id = threadEl.getAttribute("data-legacy-thread-id");
-      if (id && id.length >= 10) return id;
-    }
-    const permEl = document.querySelector("[data-thread-perm-id]");
-    if (permEl) {
-      const id = permEl.getAttribute("data-thread-perm-id");
-      if (id && id.length >= 10) return id;
-    }
-    const full = window.location.href;
-    const hashMatch = full.match(/#(?:[^/]+\/)*([A-Za-z0-9]{10,})\/?$/);
+    // Scope to the open reading pane so we never grab a thread id from the
+    // message LIST (which would make us read the wrong conversation).
+    const scope: ParentNode =
+      document.querySelector('[role="main"]') ?? document;
+
+    const legacy = scope.querySelector("[data-legacy-thread-id]");
+    const legacyId = legacy?.getAttribute("data-legacy-thread-id");
+    if (legacyId && legacyId.length >= 10) return legacyId;
+
+    const perm = scope.querySelector("[data-thread-perm-id]");
+    const permId = perm?.getAttribute("data-thread-perm-id");
+    if (permId && permId.length >= 10) return permId;
+
+    // URL hash fallback (Gmail resolves this to a thread on the server side).
+    const hashMatch = window.location.href.match(
+      /#(?:[^/]+\/)*([A-Za-z0-9]{10,})\/?$/,
+    );
     if (hashMatch) return hashMatch[1];
     return "";
   }
@@ -165,6 +170,7 @@ export class GmailAdapter {
     const draft = await generateReplyFromAPI(
       {
         platform: "gmail",
+        mode,
         threadId: startThread,
         subject,
         instruction: params.previousDraft
