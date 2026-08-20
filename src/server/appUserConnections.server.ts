@@ -1,5 +1,8 @@
 // Server-only helpers for per-user connector credentials.
-import { encryptConnectionKey, decryptConnectionKey } from "./connectionKeyCrypto";
+import {
+  encryptConnectionKey,
+  decryptConnectionKey,
+} from "./connectionKeyCrypto";
 
 export const GMAIL_CONNECTOR_ID = "google_mail";
 
@@ -9,7 +12,8 @@ export async function saveConnectionKeyForUser(
   connectionAPIKey: string,
   accountEmail?: string | null,
 ) {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { supabaseAdmin } =
+    await import("@/integrations/supabase/client.server");
   const { error } = await supabaseAdmin.from("app_user_connections").upsert(
     {
       user_id: userId,
@@ -27,7 +31,8 @@ export async function getConnectionKeyForUser(
   userId: string,
   connectorId: string,
 ): Promise<string | null> {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { supabaseAdmin } =
+    await import("@/integrations/supabase/client.server");
   const { data, error } = await supabaseAdmin
     .from("app_user_connections")
     .select("connection_key_ciphertext")
@@ -38,8 +43,12 @@ export async function getConnectionKeyForUser(
   return data ? decryptConnectionKey(data.connection_key_ciphertext) : null;
 }
 
-export async function getConnectionMetaForUser(userId: string, connectorId: string) {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+export async function getConnectionMetaForUser(
+  userId: string,
+  connectorId: string,
+) {
+  const { supabaseAdmin } =
+    await import("@/integrations/supabase/client.server");
   const { data, error } = await supabaseAdmin
     .from("app_user_connections")
     .select("account_email, updated_at")
@@ -50,8 +59,12 @@ export async function getConnectionMetaForUser(userId: string, connectorId: stri
   return data ?? null;
 }
 
-export async function deleteConnectionForUser(userId: string, connectorId: string) {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+export async function deleteConnectionForUser(
+  userId: string,
+  connectorId: string,
+) {
+  const { supabaseAdmin } =
+    await import("@/integrations/supabase/client.server");
   const { error } = await supabaseAdmin
     .from("app_user_connections")
     .delete()
@@ -65,7 +78,8 @@ export async function setConnectionAccountEmail(
   connectorId: string,
   accountEmail: string,
 ) {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { supabaseAdmin } =
+    await import("@/integrations/supabase/client.server");
   await supabaseAdmin
     .from("app_user_connections")
     .update({ account_email: accountEmail })

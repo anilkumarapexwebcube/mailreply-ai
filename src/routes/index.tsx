@@ -40,10 +40,14 @@ export const Route = createFileRoute("/")({
         content:
           "MailReply AI reads the Gmail thread you are looking at, drafts the reply in your voice, and puts it straight in the composer.",
       },
-      { property: "og:title", content: "MailReply AI - AI reply assistant inside Gmail" },
+      {
+        property: "og:title",
+        content: "MailReply AI - AI reply assistant inside Gmail",
+      },
       {
         property: "og:description",
-        content: "MailReply AI reads the Gmail thread you are looking at, drafts the reply in your voice, and puts it straight in the composer.",
+        content:
+          "MailReply AI reads the Gmail thread you are looking at, drafts the reply in your voice, and puts it straight in the composer.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -84,8 +88,9 @@ function Landing() {
             Reply to email in one click, still sounding like you.
           </h1>
           <p className="mt-6 max-w-xl text-base text-muted-foreground md:text-lg">
-            MailReply AI sits inside Gmail. Open a thread, tell it what you want to say, and the
-            draft lands in the composer ready for your edit. Nothing is ever sent automatically.
+            MailReply AI sits inside Gmail. Open a thread, tell it what you want
+            to say, and the draft lands in the composer ready for your edit.
+            Nothing is ever sent automatically.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Button asChild size="lg">
@@ -132,7 +137,9 @@ function Landing() {
 function Dashboard() {
   const queryClient = useQueryClient();
   const [token, setToken] = useState<string | null>(() => {
-    return typeof window !== "undefined" ? localStorage.getItem("mailreply_token") : null;
+    return typeof window !== "undefined"
+      ? localStorage.getItem("mailreply_token")
+      : null;
   });
   const [copied, setCopied] = useState(false);
 
@@ -165,7 +172,8 @@ function Dashboard() {
       toast.success("Gmail connected");
       void queryClient.invalidateQueries({ queryKey: ["gmail-status"] });
     },
-    onError: (error) => toast.error(error instanceof Error ? error.message : "Connection failed"),
+    onError: (error) =>
+      toast.error(error instanceof Error ? error.message : "Connection failed"),
   });
 
   const unlink = useMutation({
@@ -178,7 +186,8 @@ function Dashboard() {
   });
 
   const pair = useMutation({
-    mutationFn: () => createExtensionToken({ data: { label: "Chrome extension" } }),
+    mutationFn: () =>
+      createExtensionToken({ data: { label: "Chrome extension" } }),
     onSuccess: (data) => {
       setToken(data.token);
       localStorage.setItem("mailreply_token", data.token);
@@ -195,7 +204,7 @@ function Dashboard() {
     },
     onSuccess: () => {
       toast.success("Pairing key revoked");
-    }
+    },
   });
 
   const connected = status.data?.connected ?? false;
@@ -272,7 +281,11 @@ function Dashboard() {
 
       <Shell
         rightNav={
-          <Button variant="ghost" size="sm" onClick={() => setSignOutOpen(true)}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setSignOutOpen(true)}
+          >
             <LogOut className="mr-1.5 size-4" /> Sign out
           </Button>
         }
@@ -294,9 +307,13 @@ function Dashboard() {
                 </p>
               </div>
               {connected ? (
-                <Badge className="bg-success text-success-foreground shrink-0">Connected</Badge>
+                <Badge className="bg-success text-success-foreground shrink-0">
+                  Connected
+                </Badge>
               ) : (
-                <Badge variant="secondary" className="shrink-0">Not connected</Badge>
+                <Badge variant="secondary" className="shrink-0">
+                  Not connected
+                </Badge>
               )}
             </div>
             <div className="mt-5 flex flex-wrap gap-2">
@@ -311,7 +328,9 @@ function Dashboard() {
                 }}
                 disabled={connect.isPending}
               >
-                {connect.isPending && <Loader2 className="mr-2 size-4 animate-spin" />}
+                {connect.isPending && (
+                  <Loader2 className="mr-2 size-4 animate-spin" />
+                )}
                 <Plug className="mr-1.5 size-4" />
                 {connected ? "Reconnect Gmail" : "Connect Gmail"}
               </Button>
@@ -321,10 +340,11 @@ function Dashboard() {
                   onClick={() => setDisconnectOpen(true)}
                   disabled={unlink.isPending}
                 >
-                  {unlink.isPending
-                    ? <Loader2 className="mr-1.5 size-4 animate-spin" />
-                    : <Unplug className="mr-1.5 size-4" />
-                  }
+                  {unlink.isPending ? (
+                    <Loader2 className="mr-1.5 size-4 animate-spin" />
+                  ) : (
+                    <Unplug className="mr-1.5 size-4" />
+                  )}
                   Disconnect
                 </Button>
               )}
@@ -335,8 +355,8 @@ function Dashboard() {
           <section className="surface p-6">
             <h2 className="text-lg font-semibold">2. Pairing key</h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Generate a key and paste it into the extension popup. Creating a new key replaces the
-              previous one.
+              Generate a key and paste it into the extension popup. Creating a
+              new key replaces the previous one.
             </p>
             <div className="mt-5 flex flex-wrap items-center gap-2">
               <Button
@@ -351,7 +371,9 @@ function Dashboard() {
                 }}
                 disabled={pair.isPending}
               >
-                {pair.isPending && <Loader2 className="mr-2 size-4 animate-spin" />}
+                {pair.isPending && (
+                  <Loader2 className="mr-2 size-4 animate-spin" />
+                )}
                 {token ? "Regenerate pairing key" : "Generate pairing key"}
               </Button>
               {token && (
@@ -364,10 +386,18 @@ function Dashboard() {
                       toast.success("Copied to clipboard");
                     }}
                   >
-                    {copied ? <Check className="mr-1.5 size-4" /> : <Copy className="mr-1.5 size-4" />}
+                    {copied ? (
+                      <Check className="mr-1.5 size-4" />
+                    ) : (
+                      <Copy className="mr-1.5 size-4" />
+                    )}
                     {copied ? "Copied!" : "Copy"}
                   </Button>
-                  <Button variant="ghost" className="text-destructive hover:bg-destructive/10 hover:text-destructive" onClick={() => revoke.mutate()}>
+                  <Button
+                    variant="ghost"
+                    className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                    onClick={() => revoke.mutate()}
+                  >
                     Revoke
                   </Button>
                 </>
@@ -386,13 +416,20 @@ function Dashboard() {
             <ol className="mt-3 space-y-1.5 text-sm text-muted-foreground">
               <li>1. Download and unzip the extension folder.</li>
               <li>
-                2. Open <code className="font-mono">chrome://extensions</code> and enable Developer
-                mode.
+                2. Open <code className="font-mono">chrome://extensions</code>{" "}
+                and enable Developer mode.
               </li>
               <li>3. Choose "Load unpacked" and select the unzipped folder.</li>
-              <li>4. Open the extension popup, paste your pairing key, and reload Gmail.</li>
+              <li>
+                4. Open the extension popup, paste your pairing key, and reload
+                Gmail.
+              </li>
             </ol>
-            <Button className="mt-5" variant="outline" onClick={downloadExtension}>
+            <Button
+              className="mt-5"
+              variant="outline"
+              onClick={downloadExtension}
+            >
               <Download className="mr-1.5 size-4" /> Download extension
             </Button>
           </section>

@@ -32,7 +32,10 @@ export async function getActiveComposer(): Promise<ComposerHandle | null> {
   const el = findComposerElement();
   if (!el) return null;
 
-  const readText = () => (el.innerText ?? el.textContent ?? "").replace(/​/g, "").trim();
+  // Strip zero-width characters (ZWSP/ZWNJ/ZWJ/BOM) WhatsApp injects into the box.
+  const ZERO_WIDTH = new RegExp("[\\u200B-\\u200D\\uFEFF]", "g");
+  const readText = () =>
+    (el.innerText ?? el.textContent ?? "").replace(ZERO_WIDTH, "").trim();
 
   return {
     id: "whatsapp_composer",
@@ -75,10 +78,17 @@ export async function insertReply(
   for (let i = 1; i < lines.length; i++) {
     // Shift+Enter — WhatsApp's newline without sending.
     el.dispatchEvent(
-      new KeyboardEvent("keydown", { key: "Enter", shiftKey: true, bubbles: true, cancelable: true }),
+      new KeyboardEvent("keydown", {
+        key: "Enter",
+        shiftKey: true,
+        bubbles: true,
+        cancelable: true,
+      }),
     );
     document.execCommand("insertText", false, lines[i] ?? "");
   }
 
-  el.dispatchEvent(new InputEvent("input", { bubbles: true, cancelable: true }));
+  el.dispatchEvent(
+    new InputEvent("input", { bubbles: true, cancelable: true }),
+  );
 }

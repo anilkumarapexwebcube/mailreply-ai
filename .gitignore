@@ -17,6 +17,10 @@ status_report.md
 .nitro
 *.local
 
+# Stray scratch sub-project (not part of the app/extension build)
+scratch_lovable/node_modules
+scratch_lovable/dist
+
 # Wrangler / Cloudflare / Vercel
 .wrangler/
 .vercel/

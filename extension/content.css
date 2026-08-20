@@ -6,7 +6,11 @@
   border-radius: 999px;
   padding: 7px 14px;
   margin: 0 8px;
-  font: 500 13px/1 "Google Sans", Roboto, Arial, sans-serif;
+  font:
+    500 13px/1 "Google Sans",
+    Roboto,
+    Arial,
+    sans-serif;
   color: #fff;
   background: #c2410c;
   cursor: pointer;
@@ -31,7 +35,11 @@
   border: 1px solid #e8ddcf;
   border-radius: 16px;
   box-shadow: 0 24px 60px -18px rgba(60, 35, 20, 0.45);
-  font: 400 13px/1.5 "Google Sans", Roboto, Arial, sans-serif;
+  font:
+    400 13px/1.5 "Google Sans",
+    Roboto,
+    Arial,
+    sans-serif;
 }
 .mrai-head {
   display: flex;
@@ -156,7 +164,7 @@
   background: #fff;
   border: 1px solid #e2d6c6;
   border-radius: 10px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
   z-index: 2147483647;
   max-height: 200px;
   overflow-y: auto;

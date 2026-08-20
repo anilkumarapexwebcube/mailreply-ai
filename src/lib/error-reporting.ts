@@ -3,7 +3,10 @@
  * Replaces the proprietary error reporting hooks with clean console logging.
  */
 
-export function reportError(error: unknown, context: Record<string, unknown> = {}) {
+export function reportError(
+  error: unknown,
+  context: Record<string, unknown> = {},
+) {
   const message =
     error instanceof Response
       ? `Response ${error.status}${error.url ? ` at ${error.url}` : ""}`

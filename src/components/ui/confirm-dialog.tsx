@@ -1,7 +1,13 @@
 import * as AlertDialog from "@radix-ui/react-alert-dialog";
 import { type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, LogOut, Unplug, RefreshCw, LucideIcon } from "lucide-react";
+import {
+  AlertTriangle,
+  LogOut,
+  Unplug,
+  RefreshCw,
+  LucideIcon,
+} from "lucide-react";
 
 type Variant = "danger" | "warning" | "default";
 
@@ -18,10 +24,14 @@ interface ConfirmDialogProps {
   children?: ReactNode;
 }
 
-const variantStyles: Record<Variant, { icon: string; confirm: string; badge: string }> = {
+const variantStyles: Record<
+  Variant,
+  { icon: string; confirm: string; badge: string }
+> = {
   danger: {
     icon: "text-destructive bg-destructive/10",
-    confirm: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+    confirm:
+      "bg-destructive text-destructive-foreground hover:bg-destructive/90",
     badge: "bg-destructive/8 border border-destructive/20",
   },
   warning: {
@@ -53,16 +63,14 @@ export function ConfirmDialog({
     <AlertDialog.Root open={open} onOpenChange={onOpenChange}>
       <AlertDialog.Portal>
         {/* Overlay */}
-        <AlertDialog.Overlay
-          className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0"
-        />
+        <AlertDialog.Overlay className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
 
         {/* Dialog */}
-        <AlertDialog.Content
-          className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-2xl bg-background p-6 shadow-2xl ring-1 ring-border/60 focus:outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] duration-200"
-        >
+        <AlertDialog.Content className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-2xl bg-background p-6 shadow-2xl ring-1 ring-border/60 focus:outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] duration-200">
           {/* Icon */}
-          <div className={`mb-4 grid size-11 place-items-center rounded-xl ${styles.icon}`}>
+          <div
+            className={`mb-4 grid size-11 place-items-center rounded-xl ${styles.icon}`}
+          >
             <Icon className="size-5" />
           </div>
 

@@ -70,15 +70,39 @@ const OBJECTIVES = [
 ];
 
 const QUICK_ACTIONS: { id: string; label: string; instruction: string }[] = [
-  { id: "shorter", label: "Shorter", instruction: "Make it shorter and more concise." },
-  { id: "friendlier", label: "Friendlier", instruction: "Make it warmer and friendlier." },
-  { id: "professional", label: "More professional", instruction: "Make it more professional." },
-  { id: "grammar", label: "Fix grammar", instruction: "Fix any grammar and spelling; keep the meaning." },
-  { id: "followup", label: "Add follow-up", instruction: "Add one relevant follow-up question." },
+  {
+    id: "shorter",
+    label: "Shorter",
+    instruction: "Make it shorter and more concise.",
+  },
+  {
+    id: "friendlier",
+    label: "Friendlier",
+    instruction: "Make it warmer and friendlier.",
+  },
+  {
+    id: "professional",
+    label: "More professional",
+    instruction: "Make it more professional.",
+  },
+  {
+    id: "grammar",
+    label: "Fix grammar",
+    instruction: "Fix any grammar and spelling; keep the meaning.",
+  },
+  {
+    id: "followup",
+    label: "Add follow-up",
+    instruction: "Add one relevant follow-up question.",
+  },
 ];
 
 function esc(s: string): string {
-  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
 }
 
 export class AssistantPanel {
@@ -100,8 +124,13 @@ export class AssistantPanel {
     };
   }
 
-  private renderCustomSelect(id: string, options: { value: string; label: string }[], selectedValue: string) {
-    const selected = options.find((o) => o.value === selectedValue) || options[0];
+  private renderCustomSelect(
+    id: string,
+    options: { value: string; label: string }[],
+    selectedValue: string,
+  ) {
+    const selected =
+      options.find((o) => o.value === selectedValue) || options[0];
     const optionsHtml = options
       .map(
         (o) =>
@@ -140,16 +169,20 @@ export class AssistantPanel {
     let labelText = "What should the reply say?";
     let placeholder = "e.g. Accept the meeting but push it to Thursday morning";
     let generateLabel = "Generate reply";
-    let noteText = "Reads the conversation you have open. Nothing is sent automatically.";
+    let noteText =
+      "Reads the conversation you have open. Nothing is sent automatically.";
     if (isCompose) {
       labelText = "What should the email say?";
-      placeholder = "e.g. Write a professional intro email to a new client about our services";
+      placeholder =
+        "e.g. Write a professional intro email to a new client about our services";
       generateLabel = "Compose email";
-      noteText = "AI will compose a fresh email. Review and edit before sending.";
+      noteText =
+        "AI will compose a fresh email. Review and edit before sending.";
     }
     if (isWhatsApp) {
       placeholder = "e.g. Sure, I'll send you the details shortly.";
-      noteText = "Only the most recent visible messages are analyzed. Nothing is sent automatically.";
+      noteText =
+        "Only the most recent visible messages are analyzed. Nothing is sent automatically.";
     }
 
     const savedHtml =
@@ -158,7 +191,13 @@ export class AssistantPanel {
              <label class="mrai-label">Saved instructions</label>
              ${this.renderCustomSelect(
                "mrai-saved-select",
-               [{ value: "", label: "— Pick a saved instruction —" }, ...savedInstructions.map((s) => ({ value: s, label: s.length > 48 ? s.slice(0, 48) + "…" : s }))],
+               [
+                 { value: "", label: "— Pick a saved instruction —" },
+                 ...savedInstructions.map((s) => ({
+                   value: s,
+                   label: s.length > 48 ? s.slice(0, 48) + "…" : s,
+                 })),
+               ],
                "",
              )}
            </div>`
@@ -226,6 +265,11 @@ export class AssistantPanel {
     this.options.onClose?.();
   }
 
+  /** Public teardown — removes the panel, aborts any in-flight generation, and fires onClose. */
+  public close() {
+    this.destroy();
+  }
+
   private q<T extends HTMLElement>(sel: string): T | null {
     return this.panel ? (this.panel.querySelector(sel) as T | null) : null;
   }
@@ -254,7 +298,9 @@ export class AssistantPanel {
       this.panel?.setAttribute("aria-expanded", String(!next));
     };
 
-    this.q<HTMLButtonElement>(".mrai-close")!.addEventListener("click", () => this.destroy());
+    this.q<HTMLButtonElement>(".mrai-close")!.addEventListener("click", () =>
+      this.destroy(),
+    );
     minimizeBtn.addEventListener("click", () => setMinimized(true));
     maximizeBtn.addEventListener("click", () => setMinimized(false));
     miniToggle.addEventListener("click", () => setMinimized(false));
@@ -272,7 +318,9 @@ export class AssistantPanel {
     };
     const selects = this.panel.querySelectorAll(".mrai-custom-select");
     selects.forEach((selectEl) => {
-      const trigger = selectEl.querySelector(".mrai-select-trigger") as HTMLElement;
+      const trigger = selectEl.querySelector(
+        ".mrai-select-trigger",
+      ) as HTMLElement;
       const menu = selectEl.querySelector(".mrai-select-menu") as HTMLElement;
       const triggerSpan = trigger.querySelector("span") as HTMLElement;
       const options = selectEl.querySelectorAll(".mrai-option");
@@ -283,7 +331,9 @@ export class AssistantPanel {
         selects.forEach((s) => {
           if (s !== selectEl) {
             (s.querySelector(".mrai-select-menu") as HTMLElement).hidden = true;
-            (s.querySelector(".mrai-select-trigger") as HTMLElement).classList.remove("mrai-active");
+            (
+              s.querySelector(".mrai-select-trigger") as HTMLElement
+            ).classList.remove("mrai-active");
           }
         });
         menu.hidden = !menu.hidden;
@@ -310,8 +360,12 @@ export class AssistantPanel {
 
     this.globalClickHandler = () => {
       if (!this.panel) return;
-      this.panel.querySelectorAll(".mrai-select-menu").forEach((m) => ((m as HTMLElement).hidden = true));
-      this.panel.querySelectorAll(".mrai-select-trigger").forEach((t) => t.classList.remove("mrai-active"));
+      this.panel
+        .querySelectorAll(".mrai-select-menu")
+        .forEach((m) => ((m as HTMLElement).hidden = true));
+      this.panel
+        .querySelectorAll(".mrai-select-trigger")
+        .forEach((t) => t.classList.remove("mrai-active"));
     };
     document.addEventListener("click", this.globalClickHandler);
 
@@ -325,7 +379,10 @@ export class AssistantPanel {
       }
     };
 
-    const runGenerate = async (extraInstruction?: string, usePreviousDraft = false) => {
+    const runGenerate = async (
+      extraInstruction?: string,
+      usePreviousDraft = false,
+    ) => {
       // Second click while generating = Stop.
       if (this.abortController) {
         this.abortController.abort();
@@ -356,7 +413,9 @@ export class AssistantPanel {
             language: this.values.language,
             emoji: this.values.emoji,
             objective: this.values.objective,
-            ...(usePreviousDraft && this.lastDraft ? { previousDraft: this.lastDraft } : {}),
+            ...(usePreviousDraft && this.lastDraft
+              ? { previousDraft: this.lastDraft }
+              : {}),
           },
           this.abortController.signal,
         );
@@ -365,7 +424,11 @@ export class AssistantPanel {
 
         // Persist instruction if the user asked to save it.
         const saveChk = this.q<HTMLInputElement>("#mrai-save-instruction");
-        if (saveChk?.checked && baseInstruction && this.options.onSaveInstruction) {
+        if (
+          saveChk?.checked &&
+          baseInstruction &&
+          this.options.onSaveInstruction
+        ) {
           await this.options.onSaveInstruction(baseInstruction);
           saveChk.checked = false;
         }
@@ -389,25 +452,33 @@ export class AssistantPanel {
           return;
         }
         status.className = "mrai-error";
-        status.textContent = (err instanceof Error ? err.message : null) || "Could not generate a draft.";
+        status.textContent =
+          (err instanceof Error ? err.message : null) ||
+          "Could not generate a draft.";
       }
     };
 
     generateBtn.addEventListener("click", () => runGenerate());
-    this.q<HTMLButtonElement>("#mrai-regenerate")!.addEventListener("click", () => runGenerate());
+    this.q<HTMLButtonElement>("#mrai-regenerate")!.addEventListener(
+      "click",
+      () => runGenerate(),
+    );
 
-    this.q<HTMLButtonElement>("#mrai-copy")!.addEventListener("click", async () => {
-      const text = draftEl.textContent || this.lastDraft;
-      if (!text) return;
-      try {
-        await navigator.clipboard.writeText(text);
-        status.className = "mrai-note";
-        status.textContent = "Copied.";
-      } catch {
-        status.className = "mrai-error";
-        status.textContent = "Copy failed.";
-      }
-    });
+    this.q<HTMLButtonElement>("#mrai-copy")!.addEventListener(
+      "click",
+      async () => {
+        const text = draftEl.textContent || this.lastDraft;
+        if (!text) return;
+        try {
+          await navigator.clipboard.writeText(text);
+          status.className = "mrai-note";
+          status.textContent = "Copied.";
+        } catch {
+          status.className = "mrai-error";
+          status.textContent = "Copy failed.";
+        }
+      },
+    );
 
     this.panel.querySelectorAll("[data-quick]").forEach((btn) => {
       btn.addEventListener("click", () => {
@@ -430,7 +501,8 @@ export class AssistantPanel {
         await this.doInsert(text, "replace", insertBtn);
       } catch (err: unknown) {
         status.className = "mrai-error";
-        status.textContent = (err instanceof Error ? err.message : null) || "Failed to insert.";
+        status.textContent =
+          (err instanceof Error ? err.message : null) || "Failed to insert.";
       }
     });
   }
@@ -452,7 +524,11 @@ export class AssistantPanel {
           status.textContent = "Cancelled. Draft kept above.";
           return;
         }
-        await this.doInsert(text, choice === "insert-below" ? "insert-below" : "replace", insertBtn);
+        await this.doInsert(
+          text,
+          choice === "insert-below" ? "insert-below" : "replace",
+          insertBtn,
+        );
       });
     });
   }
@@ -473,7 +549,9 @@ export class AssistantPanel {
       const status = this.q<HTMLElement>("#mrai-status");
       if (status) {
         status.className = "mrai-error";
-        status.textContent = (err instanceof Error ? err.message : null) || "Failed to insert. Try again.";
+        status.textContent =
+          (err instanceof Error ? err.message : null) ||
+          "Failed to insert. Try again.";
       }
     }
   }

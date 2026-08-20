@@ -72,7 +72,7 @@ function buildZip(files: { name: string; data: Buffer }[]): Buffer {
   }
 
   const centralParts: Buffer[] = [];
-  let centralOffset = offset;
+  const centralOffset = offset;
 
   for (const e of entries) {
     const nameBytes = Buffer.from(e.name, "utf8");

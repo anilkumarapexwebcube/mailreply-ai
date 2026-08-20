@@ -6,9 +6,18 @@ export const Route = createFileRoute("/oauth/google-mail/return")({
   head: () => ({
     meta: [
       { title: "Finishing Gmail connection - MailReply AI" },
-      { name: "description", content: "Completing the secure Gmail connection for MailReply AI." },
-      { property: "og:title", content: "Finishing Gmail connection - MailReply AI" },
-      { property: "og:description", content: "Completing the secure Gmail connection." },
+      {
+        name: "description",
+        content: "Completing the secure Gmail connection for MailReply AI.",
+      },
+      {
+        property: "og:title",
+        content: "Finishing Gmail connection - MailReply AI",
+      },
+      {
+        property: "og:description",
+        content: "Completing the secure Gmail connection.",
+      },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -21,15 +30,24 @@ function OAuthReturn() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
 
-    const notify = (type: "appUserConnectorOAuthComplete" | "appUserConnectorOAuthFailed") => {
-      window.opener?.postMessage({ type, connectorId: "google_mail" }, window.location.origin);
+    const notify = (
+      type: "appUserConnectorOAuthComplete" | "appUserConnectorOAuthFailed",
+    ) => {
+      window.opener?.postMessage(
+        { type, connectorId: "google_mail" },
+        window.location.origin,
+      );
       window.close();
     };
 
     // Google sends ?error=access_denied when the user cancels
     const error = params.get("error");
     if (error) {
-      setMessage(error === "access_denied" ? "Google sign-in was cancelled." : `Google error: ${error}`);
+      setMessage(
+        error === "access_denied"
+          ? "Google sign-in was cancelled."
+          : `Google error: ${error}`,
+      );
       notify("appUserConnectorOAuthFailed");
       return;
     }
@@ -46,7 +64,9 @@ function OAuthReturn() {
       .then(() => notify("appUserConnectorOAuthComplete"))
       .catch((err) => {
         console.error("Gmail connection failed:", err);
-        setMessage("Could not finish the connection. Close this window and try again.");
+        setMessage(
+          "Could not finish the connection. Close this window and try again.",
+        );
         notify("appUserConnectorOAuthFailed");
       });
   }, []);

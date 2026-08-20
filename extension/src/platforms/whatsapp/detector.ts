@@ -6,7 +6,8 @@ import type { ConversationDetection, ChatIdentity } from "../../shared/types";
 function isAuthenticated(): boolean {
   // WhatsApp usually shows a landing screen (QR code) or a loading screen if not authenticated.
   // The presence of the main chat list or the sidebar header usually means authenticated.
-  const side = document.querySelector("#pane-side") || document.querySelector("header");
+  const side =
+    document.querySelector("#pane-side") || document.querySelector("header");
   const qrCode = document.querySelector('[data-testid="qrcode"]');
   return Boolean(side && !qrCode);
 }
@@ -30,7 +31,9 @@ function getChatIdentity(): ChatIdentity | undefined {
   if (!header) return undefined;
 
   // The chat title is usually the first span/div with dir="auto" in the header.
-  const dirNodes = Array.from(header.querySelectorAll('span[dir="auto"], div[dir="auto"]'));
+  const dirNodes = Array.from(
+    header.querySelectorAll('span[dir="auto"], div[dir="auto"]'),
+  );
   const title = dirNodes[0]?.textContent?.trim() || "Unknown Contact";
   // A secondary line (phone number / "click here for contact info" / member list)
   // is used only to disambiguate two chats that happen to share a display name.

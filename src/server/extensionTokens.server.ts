@@ -10,7 +10,8 @@ export function newToken(): string {
 }
 
 export async function createTokenForUser(userId: string, label: string) {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { supabaseAdmin } =
+    await import("@/integrations/supabase/client.server");
   const token = newToken();
   // Creating a new key must invalidate every previously issued key for this user.
   const { error: revokeError } = await supabaseAdmin
@@ -19,7 +20,10 @@ export async function createTokenForUser(userId: string, label: string) {
     .eq("user_id", userId)
     .eq("revoked", false);
   if (revokeError) {
-    console.error("[extensionTokens] Failed to revoke old tokens:", revokeError);
+    console.error(
+      "[extensionTokens] Failed to revoke old tokens:",
+      revokeError,
+    );
     throw new Error(`Failed to revoke old tokens: ${revokeError.message}`);
   }
   const { error } = await supabaseAdmin.from("extension_tokens").insert({
@@ -35,7 +39,8 @@ export async function createTokenForUser(userId: string, label: string) {
 }
 
 export async function revokeTokensForUser(userId: string) {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { supabaseAdmin } =
+    await import("@/integrations/supabase/client.server");
   const { error } = await supabaseAdmin
     .from("extension_tokens")
     .update({ revoked: true })
@@ -53,7 +58,8 @@ export async function resolveToken(token: string): Promise<string | null> {
     console.warn("[extensionTokens] Token rejected: does not start with mr_");
     return null;
   }
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { supabaseAdmin } =
+    await import("@/integrations/supabase/client.server");
   const { data, error } = await supabaseAdmin
     .from("extension_tokens")
     .select("id, user_id, revoked")
@@ -64,7 +70,9 @@ export async function resolveToken(token: string): Promise<string | null> {
     return null;
   }
   if (!data) {
-    console.warn("[extensionTokens] Token not found in DB (not yet saved or wrong key).");
+    console.warn(
+      "[extensionTokens] Token not found in DB (not yet saved or wrong key).",
+    );
     return null;
   }
   if (data.revoked) {

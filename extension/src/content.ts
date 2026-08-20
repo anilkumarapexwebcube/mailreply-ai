@@ -8,7 +8,10 @@ async function boot() {
   try {
     settings = await loadSettings();
   } catch (err) {
-    console.warn("[MailReply AI] Could not load settings; using defaults.", err);
+    console.warn(
+      "[MailReply AI] Could not load settings; using defaults.",
+      err,
+    );
     return;
   }
 

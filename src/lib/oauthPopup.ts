@@ -3,6 +3,9 @@ export const GMAIL_CONNECTOR_ID = "google_mail";
 
 export function waitForOAuthCompletion(popup: Window) {
   return new Promise<void>((resolve, reject) => {
+    // Assigned after `cleanup` is defined (cleanup reads it), so it cannot be
+    // inlined to a const declaration.
+    // eslint-disable-next-line prefer-const
     let poll: number | undefined;
     const cleanup = () => {
       window.removeEventListener("message", onMessage);
@@ -10,12 +13,14 @@ export function waitForOAuthCompletion(popup: Window) {
     };
     const onMessage = (event: MessageEvent) => {
       const type = (event.data as { type?: string } | null)?.type;
-      const connectorId = (event.data as { connectorId?: string } | null)?.connectorId;
+      const connectorId = (event.data as { connectorId?: string } | null)
+        ?.connectorId;
       if (
         event.origin !== window.location.origin ||
         event.source !== popup ||
         connectorId !== GMAIL_CONNECTOR_ID ||
-        (type !== "appUserConnectorOAuthComplete" && type !== "appUserConnectorOAuthFailed")
+        (type !== "appUserConnectorOAuthComplete" &&
+          type !== "appUserConnectorOAuthFailed")
       ) {
         return;
       }

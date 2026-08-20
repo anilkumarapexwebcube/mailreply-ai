@@ -79,7 +79,9 @@ function extractBody(part?: GmailPart): string {
     return stripHtml(decodeB64Url(part.body.data));
   }
   if (part.parts?.length) {
-    const plain = part.parts.find((p) => p.mimeType === "text/plain" && p.body?.data);
+    const plain = part.parts.find(
+      (p) => p.mimeType === "text/plain" && p.body?.data,
+    );
     if (plain) return decodeB64Url(plain.body!.data!);
     for (const child of part.parts) {
       const found = extractBody(child);
@@ -92,7 +94,10 @@ function extractBody(part?: GmailPart): string {
 
 function header(msg: GmailMessage, name: string): string {
   const headers = msg.payload?.headers ?? [];
-  return headers.find((h) => h.name.toLowerCase() === name.toLowerCase())?.value ?? "";
+  return (
+    headers.find((h) => h.name.toLowerCase() === name.toLowerCase())?.value ??
+    ""
+  );
 }
 
 /** Trims quoted history and signature noise from a single message body. */
@@ -196,10 +201,9 @@ export async function fetchConversation(
       cc: header(msg, "Cc"),
       date: header(msg, "Date"),
       subject: header(msg, "Subject"),
-      body: cleanMessageBody(extractBody(msg.payload) || msg.snippet || "").slice(
-        0,
-        MAX_BODY_CHARS,
-      ),
+      body: cleanMessageBody(
+        extractBody(msg.payload) || msg.snippet || "",
+      ).slice(0, MAX_BODY_CHARS),
     })),
   };
 }
@@ -213,7 +217,11 @@ export async function findThreadBySubject(
   const cleaned = subject.replace(/^(re|fwd?)\s*:\s*/i, "").trim();
   if (!cleaned) return null;
   const q = `subject:"${cleaned.replace(/"/g, "")}"`;
-  const res = await gmail.users.threads.list({ userId: "me", maxResults: 1, q });
+  const res = await gmail.users.threads.list({
+    userId: "me",
+    maxResults: 1,
+    q,
+  });
   return res.data.threads?.[0]?.id ?? null;
 }
 
@@ -223,7 +231,8 @@ export function renderConversationForPrompt(
 ): string {
   const lines = [`Subject: ${thread.subject}`, ""];
   for (const msg of thread.messages) {
-    const isUser = userEmail && msg.from.toLowerCase().includes(userEmail.toLowerCase());
+    const isUser =
+      userEmail && msg.from.toLowerCase().includes(userEmail.toLowerCase());
     lines.push(
       `--- Message ${isUser ? "(sent by ME)" : "(received)"} ---`,
       `From: ${msg.from}`,

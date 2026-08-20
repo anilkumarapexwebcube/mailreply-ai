@@ -8,7 +8,14 @@ async function getToken() {
 async function post(path, body) {
   const token = await getToken();
   if (!token) {
-    return { ok: false, status: 401, data: { error: "Not paired. Open the MailReply AI popup and paste your pairing key." } };
+    return {
+      ok: false,
+      status: 401,
+      data: {
+        error:
+          "Not paired. Open the MailReply AI popup and paste your pairing key.",
+      },
+    };
   }
   const res = await fetch(`${MAILREPLY_API_BASE}${path}`, {
     method: "POST",
@@ -30,7 +37,9 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     return true;
   }
   if (message?.type === "MAILREPLY_GENERATE") {
-    post("/api/public/extension/generate-reply", message.payload).then(sendResponse);
+    post("/api/public/extension/generate-reply", message.payload).then(
+      sendResponse,
+    );
     return true;
   }
   if (message?.type === "MAILREPLY_OPEN_DASHBOARD") {

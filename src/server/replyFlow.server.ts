@@ -1,5 +1,8 @@
 // Server-only: turn a Gmail thread reference into an AI-drafted reply.
-import { GMAIL_CONNECTOR_ID, getConnectionKeyForUser } from "./appUserConnections.server";
+import {
+  GMAIL_CONNECTOR_ID,
+  getConnectionKeyForUser,
+} from "./appUserConnections.server";
 import {
   GmailError,
   fetchConversation,
@@ -46,9 +49,18 @@ export class ReplyError extends Error {
   }
 }
 
+/** Minimal shape of the WhatsApp ConversationContext the extension sends. */
+export interface ConversationInput {
+  title?: string;
+  conversationId?: string;
+  visibleMessageCount?: number;
+  participants?: Array<{ displayName?: string }>;
+  messages?: unknown[];
+}
+
 export interface ReplyRequest {
   platform?: "gmail" | "whatsapp";
-  conversation?: any; // ConversationContext from extension
+  conversation?: ConversationInput; // ConversationContext from extension
   threadId?: string;
   subject?: string;
   instruction?: string;
@@ -61,11 +73,17 @@ export interface ReplyRequest {
   signal?: AbortSignal;
 }
 
-export async function generateReplyForUser(userId: string, input: ReplyRequest) {
+export async function generateReplyForUser(
+  userId: string,
+  input: ReplyRequest,
+) {
   const isWhatsApp = input.platform === "whatsapp";
 
   // For WhatsApp, Gmail token is not required. Only required for Gmail platform.
-  const refreshToken = await getConnectionKeyForUser(userId, GMAIL_CONNECTOR_ID);
+  const refreshToken = await getConnectionKeyForUser(
+    userId,
+    GMAIL_CONNECTOR_ID,
+  );
   if (!isWhatsApp && !refreshToken) {
     throw new ReplyError(
       "Gmail is not connected for this account. Open MailReply AI and connect Gmail.",
@@ -74,14 +92,18 @@ export async function generateReplyForUser(userId: string, input: ReplyRequest) 
     );
   }
 
-  const tone: Tone = TONES.includes(input.tone as Tone) ? (input.tone as Tone) : "professional";
+  const tone: Tone = TONES.includes(input.tone as Tone)
+    ? (input.tone as Tone)
+    : "professional";
   const length: ReplyLength = LENGTHS.includes(input.length as ReplyLength)
     ? (input.length as ReplyLength)
     : "medium";
   const emoji: EmojiUsage = EMOJI.includes(input.emoji as EmojiUsage)
     ? (input.emoji as EmojiUsage)
     : "auto";
-  const objective: ReplyObjective = OBJECTIVES.includes(input.objective as ReplyObjective)
+  const objective: ReplyObjective = OBJECTIVES.includes(
+    input.objective as ReplyObjective,
+  )
     ? (input.objective as ReplyObjective)
     : "general";
   const language = (input.language ?? "auto").slice(0, 40);
@@ -89,7 +111,7 @@ export async function generateReplyForUser(userId: string, input: ReplyRequest) 
 
   let thread: ConversationThread | null = null;
   let userEmail: string | null = null;
-  
+
   if (!isWhatsApp) {
     try {
       userEmail = (await getProfile(refreshToken!)).emailAddress ?? null;
@@ -154,15 +176,20 @@ export async function generateReplyForUser(userId: string, input: ReplyRequest) 
     objective,
     emoji,
     composeMode: isComposeMode,
-    ...(input.readFullChat !== undefined ? { readFullChat: input.readFullChat } : {}),
+    ...(input.readFullChat !== undefined
+      ? { readFullChat: input.readFullChat }
+      : {}),
     ...(input.signal ? { signal: input.signal } : {}),
   });
 
   try {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { supabaseAdmin } =
+      await import("@/integrations/supabase/client.server");
     await supabaseAdmin.from("reply_history").insert({
       user_id: userId,
-      thread_subject: isWhatsApp ? (input.conversation?.title || "WhatsApp Chat") : (thread?.subject || input.subject || ""),
+      thread_subject: isWhatsApp
+        ? input.conversation?.title || "WhatsApp Chat"
+        : thread?.subject || input.subject || "",
       instruction,
       tone,
       length,
@@ -174,9 +201,19 @@ export async function generateReplyForUser(userId: string, input: ReplyRequest) 
 
   return {
     draft,
-    subject: isWhatsApp ? input.conversation?.title || "" : (thread?.subject || input.subject || ""),
-    threadId: isWhatsApp ? input.conversation?.conversationId || "" : (thread?.threadId || input.threadId || ""),
-    messageCount: isWhatsApp ? input.conversation?.visibleMessageCount || 0 : (thread?.messages?.length || 0),
-    participants: isWhatsApp ? input.conversation?.participants?.map((p: any) => p.displayName).join(", ") || "" : (thread?.lastFrom || ""),
+    subject: isWhatsApp
+      ? input.conversation?.title || ""
+      : thread?.subject || input.subject || "",
+    threadId: isWhatsApp
+      ? input.conversation?.conversationId || ""
+      : thread?.threadId || input.threadId || "",
+    messageCount: isWhatsApp
+      ? input.conversation?.visibleMessageCount || 0
+      : thread?.messages?.length || 0,
+    participants: isWhatsApp
+      ? input.conversation?.participants
+          ?.map((p: { displayName?: string }) => p.displayName)
+          .join(", ") || ""
+      : thread?.lastFrom || "",
   };
 }

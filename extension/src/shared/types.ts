@@ -65,7 +65,7 @@ export interface ConversationPlatform {
   insertReply(
     composer: ComposerHandle,
     text: string,
-    mode?: InsertMode
+    mode?: InsertMode,
   ): Promise<void>;
 }
 
@@ -91,8 +91,8 @@ export type PlatformMessage =
       payload: {
         platform: PlatformType;
         conversation?: ConversationContext; // For WhatsApp, we pass raw context.
-        threadId?: string;                  // For Gmail, we pass threadId
-        subject?: string;                   // For Gmail, we pass subject
+        threadId?: string; // For Gmail, we pass threadId
+        subject?: string; // For Gmail, we pass subject
         instructions: ReplyInstructions;
       };
     };

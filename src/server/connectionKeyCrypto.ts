@@ -8,7 +8,8 @@ function key(): Buffer {
   const raw =
     process.env["APP_CONNECTION_ENCRYPTION_KEY"] ||
     process.env["APP_USER_CONNECTION_KEY_SECRET"]; // legacy compat
-  if (!raw) throw new Error("APP_CONNECTION_ENCRYPTION_KEY is not set in .env.local");
+  if (!raw)
+    throw new Error("APP_CONNECTION_ENCRYPTION_KEY is not set in .env.local");
   return Buffer.from(raw, "base64");
 }
 
@@ -26,5 +27,7 @@ export function decryptConnectionKey(stored: string): string {
   const ct = buf.subarray(28);
   const decipher = createDecipheriv("aes-256-gcm", key(), iv);
   decipher.setAuthTag(tag);
-  return Buffer.concat([decipher.update(ct), decipher.final()]).toString("utf8");
+  return Buffer.concat([decipher.update(ct), decipher.final()]).toString(
+    "utf8",
+  );
 }

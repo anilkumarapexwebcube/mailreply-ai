@@ -47,7 +47,9 @@ export const DEFAULT_SETTINGS: MailReplySettings = {
   defaultInstruction: "",
 };
 
-function mergeDefaults(stored: Partial<MailReplySettings> | undefined): MailReplySettings {
+function mergeDefaults(
+  stored: Partial<MailReplySettings> | undefined,
+): MailReplySettings {
   const s = stored ?? {};
   return {
     enabled: s.enabled ?? DEFAULT_SETTINGS.enabled,
@@ -55,11 +57,21 @@ function mergeDefaults(stored: Partial<MailReplySettings> | undefined): MailRepl
       gmail: s.platforms?.gmail ?? DEFAULT_SETTINGS.platforms.gmail,
       whatsapp: s.platforms?.whatsapp ?? DEFAULT_SETTINGS.platforms.whatsapp,
     },
-    gmailDefaults: { ...DEFAULT_SETTINGS.gmailDefaults, ...(s.gmailDefaults ?? {}) },
-    whatsappDefaults: { ...DEFAULT_SETTINGS.whatsappDefaults, ...(s.whatsappDefaults ?? {}) },
-    savedInstructions: Array.isArray(s.savedInstructions) ? s.savedInstructions.slice(0, 20) : [],
+    gmailDefaults: {
+      ...DEFAULT_SETTINGS.gmailDefaults,
+      ...(s.gmailDefaults ?? {}),
+    },
+    whatsappDefaults: {
+      ...DEFAULT_SETTINGS.whatsappDefaults,
+      ...(s.whatsappDefaults ?? {}),
+    },
+    savedInstructions: Array.isArray(s.savedInstructions)
+      ? s.savedInstructions.slice(0, 20)
+      : [],
     defaultInstruction:
-      typeof s.defaultInstruction === "string" ? s.defaultInstruction : DEFAULT_SETTINGS.defaultInstruction,
+      typeof s.defaultInstruction === "string"
+        ? s.defaultInstruction
+        : DEFAULT_SETTINGS.defaultInstruction,
   };
 }
 
@@ -80,16 +92,24 @@ export function getPlatformDefaults(
   settings: MailReplySettings,
   platform: PlatformType,
 ): PlatformDefaults {
-  return platform === "whatsapp" ? settings.whatsappDefaults : settings.gmailDefaults;
+  return platform === "whatsapp"
+    ? settings.whatsappDefaults
+    : settings.gmailDefaults;
 }
 
 /** Returns true when the assistant should run for the given platform. */
-export function isPlatformEnabled(settings: MailReplySettings, platform: PlatformType): boolean {
+export function isPlatformEnabled(
+  settings: MailReplySettings,
+  platform: PlatformType,
+): boolean {
   return settings.enabled && settings.platforms[platform];
 }
 
 /** Adds an instruction to the saved list (de-duplicated, newest first, capped). */
-export function addSavedInstruction(list: string[], instruction: string): string[] {
+export function addSavedInstruction(
+  list: string[],
+  instruction: string,
+): string[] {
   const trimmed = instruction.trim();
   if (!trimmed) return list;
   const deduped = list.filter((i) => i.trim() !== trimmed);

@@ -59,7 +59,13 @@ export class GmailAdapter {
   }
 
   private currentSubject(): string {
-    const selectors = ["h2.hP", "[data-legacy-thread-id] h2", "div.ha h2", "div.nH h2", "span.bog"];
+    const selectors = [
+      "h2.hP",
+      "[data-legacy-thread-id] h2",
+      "div.ha h2",
+      "div.nH h2",
+      "span.bog",
+    ];
     for (const sel of selectors) {
       const el = document.querySelector(sel);
       if (el && el.textContent?.trim()) return el.textContent.trim();
@@ -70,26 +76,32 @@ export class GmailAdapter {
   private isThreadOpen(): boolean {
     return Boolean(
       document.querySelector("h2.hP") ||
-        document.querySelector("div.adn.ads") ||
-        document.querySelector("div.gs"),
+      document.querySelector("div.adn.ads") ||
+      document.querySelector("div.gs"),
     );
   }
 
   private getComposeSubject(): string {
-    const subjectInput = document.querySelector('input[name="subjectbox"]') as HTMLInputElement;
+    const subjectInput = document.querySelector(
+      'input[name="subjectbox"]',
+    ) as HTMLInputElement;
     return subjectInput ? subjectInput.value.trim() : "";
   }
 
   private findComposeBody(): HTMLElement | null {
     const boxes = Array.from(
-      document.querySelectorAll('div[role="textbox"][contenteditable="true"], div[g_editable="true"]'),
+      document.querySelectorAll(
+        'div[role="textbox"][contenteditable="true"], div[g_editable="true"]',
+      ),
     ) as HTMLElement[];
     return boxes.find((box) => box.offsetParent !== null) || null;
   }
 
   private clickReply() {
     const candidates = Array.from(
-      document.querySelectorAll('span.ams.bkH, div[role="button"][data-tooltip*="Reply"]'),
+      document.querySelectorAll(
+        'span.ams.bkH, div[role="button"][data-tooltip*="Reply"]',
+      ),
     ) as HTMLElement[];
     const target = candidates.find((el) => el.offsetParent !== null);
     if (target) target.click();
@@ -104,7 +116,11 @@ export class GmailAdapter {
       .join("<div><br></div>");
   }
 
-  private writeInto(body: HTMLElement, text: string, mode: "replace" | "insert-below") {
+  private writeInto(
+    body: HTMLElement,
+    text: string,
+    mode: "replace" | "insert-below",
+  ) {
     body.focus();
     const html = this.toHtml(text);
     const existing = body.innerHTML.trim();
@@ -122,7 +138,10 @@ export class GmailAdapter {
       this.clickReply();
       await new Promise((r) => setTimeout(r, 700));
       body = this.findComposeBody();
-      if (!body) throw new Error("Could not find the Gmail reply box. Click Reply and try again.");
+      if (!body)
+        throw new Error(
+          "Could not find the Gmail reply box. Click Reply and try again.",
+        );
     }
     this.writeInto(body, text, mode);
   }
@@ -139,7 +158,9 @@ export class GmailAdapter {
   ): Promise<string> {
     const isCompose = mode === "compose";
     const startThread = isCompose ? "" : this.threadIdFromUrl();
-    const subject = isCompose ? this.getComposeSubject() : this.currentSubject();
+    const subject = isCompose
+      ? this.getComposeSubject()
+      : this.currentSubject();
 
     const draft = await generateReplyFromAPI(
       {
@@ -161,13 +182,18 @@ export class GmailAdapter {
     // Race-condition protection: if the user switched threads mid-generation,
     // refuse to hand back a draft for the old conversation.
     if (!isCompose && this.threadIdFromUrl() !== startThread) {
-      throw new Error("The conversation changed while the reply was being generated. Please generate again.");
+      throw new Error(
+        "The conversation changed while the reply was being generated. Please generate again.",
+      );
     }
     return draft;
   }
 
   private async persistInstruction(instruction: string) {
-    this.settings.savedInstructions = addSavedInstruction(this.settings.savedInstructions, instruction);
+    this.settings.savedInstructions = addSavedInstruction(
+      this.settings.savedInstructions,
+      instruction,
+    );
     await saveSettings(this.settings);
   }
 
@@ -217,10 +243,13 @@ export class GmailAdapter {
   }
 
   private mountComposeButton() {
-    const composeWindows = document.querySelectorAll('div[role="dialog"].nH, div.AD');
+    const composeWindows = document.querySelectorAll(
+      'div[role="dialog"].nH, div.AD',
+    );
     composeWindows.forEach((win) => {
       if (win.querySelector(".mrai-compose-btn")) return;
-      const toolbar = win.querySelector("div.btC") || win.querySelector("td.gU.Up");
+      const toolbar =
+        win.querySelector("div.btC") || win.querySelector("td.gU.Up");
       if (!toolbar) return;
       const btn = document.createElement("button");
       btn.type = "button";

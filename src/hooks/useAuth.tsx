@@ -8,7 +8,9 @@ export function useAuth() {
 
   useEffect(() => {
     const fallbackTimer = setTimeout(() => {
-      console.log("useAuth: Fallback timeout reached, forcing loading to false");
+      console.log(
+        "useAuth: Fallback timeout reached, forcing loading to false",
+      );
       setLoading(false);
     }, 2000);
 
@@ -19,7 +21,8 @@ export function useAuth() {
         setLoading(false);
         clearTimeout(fallbackTimer);
       });
-      void supabase.auth.getSession()
+      void supabase.auth
+        .getSession()
         .then(({ data: { session: current } }) => {
           setSession(current);
           setLoading(false);
@@ -39,7 +42,7 @@ export function useAuth() {
       setLoading(false);
       clearTimeout(fallbackTimer);
     }
-    
+
     return () => clearTimeout(fallbackTimer);
   }, []);
 

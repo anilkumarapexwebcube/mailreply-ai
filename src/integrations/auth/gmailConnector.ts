@@ -15,7 +15,9 @@ function getOAuthConfig() {
   const clientId = process.env["GOOGLE_CLIENT_ID"];
   const clientSecret = process.env["GOOGLE_CLIENT_SECRET"];
   if (!clientId || !clientSecret) {
-    throw new Error("GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET must be set in .env.local");
+    throw new Error(
+      "GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET must be set in .env.local",
+    );
   }
   return { clientId, clientSecret };
 }
@@ -25,7 +27,11 @@ export async function buildGoogleAuthUrl(returnUrl: string): Promise<string> {
   const { google } = await import("googleapis");
   const { clientId, clientSecret } = getOAuthConfig();
 
-  const oauth2Client = new google.auth.OAuth2(clientId, clientSecret, returnUrl);
+  const oauth2Client = new google.auth.OAuth2(
+    clientId,
+    clientSecret,
+    returnUrl,
+  );
 
   return oauth2Client.generateAuthUrl({
     access_type: "offline",
@@ -48,7 +54,11 @@ export async function exchangeGoogleCode(
   const { google } = await import("googleapis");
   const { clientId, clientSecret } = getOAuthConfig();
 
-  const oauth2Client = new google.auth.OAuth2(clientId, clientSecret, returnUrl);
+  const oauth2Client = new google.auth.OAuth2(
+    clientId,
+    clientSecret,
+    returnUrl,
+  );
   const { tokens } = await oauth2Client.getToken(code);
 
   if (!tokens.refresh_token) {
@@ -75,7 +85,9 @@ export async function createGoogleClient(refreshToken: string) {
 }
 
 /** Fetches the Gmail profile email for the authenticated user. */
-export async function getGoogleUserEmail(refreshToken: string): Promise<string | null> {
+export async function getGoogleUserEmail(
+  refreshToken: string,
+): Promise<string | null> {
   const { google } = await import("googleapis");
   const auth = await createGoogleClient(refreshToken);
   const gmail = google.gmail({ version: "v1", auth });

@@ -14,7 +14,12 @@ import {
   type Tone,
 } from "./ai.prompts";
 
-export type { Tone, ReplyLength, EmojiUsage, ReplyObjective } from "./ai.prompts";
+export type {
+  Tone,
+  ReplyLength,
+  EmojiUsage,
+  ReplyObjective,
+} from "./ai.prompts";
 
 const MODELS = {
   groq: "openai/gpt-oss-120b",
@@ -52,7 +57,8 @@ function toPromptArgs(args: GenerateReplyArgs): BuildPromptArgs {
   const readFullChat = args.readFullChat ?? wantsFullChat(args.instruction);
   return {
     platform: args.platform,
-    conversation: (args.conversation as BuildPromptArgs["conversation"]) ?? null,
+    conversation:
+      (args.conversation as BuildPromptArgs["conversation"]) ?? null,
     thread: args.thread as unknown as BuildPromptArgs["thread"],
     userEmail: args.userEmail,
     userName: args.userName,
@@ -120,7 +126,8 @@ async function tryOpenAI(args: GenerateReplyArgs): Promise<string> {
 /** Google Gemini (fallback 2). */
 async function tryGemini(args: GenerateReplyArgs): Promise<string> {
   const apiKey = process.env["GOOGLE_GENERATIVE_AI_API_KEY"];
-  if (!apiKey) throw new AiGatewayError("GOOGLE_GENERATIVE_AI_API_KEY not set.", 500);
+  if (!apiKey)
+    throw new AiGatewayError("GOOGLE_GENERATIVE_AI_API_KEY not set.", 500);
   const { createGoogleGenerativeAI } = await import("@ai-sdk/google");
   const { generateText } = await import("ai");
   const { system, prompt } = buildPrompts(toPromptArgs(args));
@@ -192,12 +199,22 @@ export async function generateReply(args: GenerateReplyArgs): Promise<string> {
     }
   }
 
-  const message = lastError instanceof Error ? lastError.message : String(lastError);
+  const message =
+    lastError instanceof Error ? lastError.message : String(lastError);
   if (/\b429\b|rate.?limit/i.test(message)) {
-    throw new AiGatewayError("AI rate limit reached across all providers. Try again shortly.", 429);
+    throw new AiGatewayError(
+      "AI rate limit reached across all providers. Try again shortly.",
+      429,
+    );
   }
   if (/\b402\b|credit/i.test(message)) {
-    throw new AiGatewayError("AI credits are exhausted on all configured providers.", 402);
+    throw new AiGatewayError(
+      "AI credits are exhausted on all configured providers.",
+      402,
+    );
   }
-  throw new AiGatewayError(`All AI providers failed. Last error: ${message}`, 502);
+  throw new AiGatewayError(
+    `All AI providers failed. Last error: ${message}`,
+    502,
+  );
 }

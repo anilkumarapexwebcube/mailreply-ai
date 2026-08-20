@@ -34,12 +34,16 @@ const OBJECTIVE_GUIDE: Record<ReplyObjective, string> = {
   general: "",
   qualification:
     "Goal: qualify this lead. Politely gather the key missing details you need, without being pushy.",
-  "follow-up": "Goal: send a gentle, non-pushy follow-up that moves the conversation forward.",
-  meeting: "Goal: move toward scheduling a call/meeting. Propose next steps or ask for availability.",
-  requirements: "Goal: collect the requirements/scope needed to help them, one clear ask at a time.",
+  "follow-up":
+    "Goal: send a gentle, non-pushy follow-up that moves the conversation forward.",
+  meeting:
+    "Goal: move toward scheduling a call/meeting. Propose next steps or ask for availability.",
+  requirements:
+    "Goal: collect the requirements/scope needed to help them, one clear ask at a time.",
   pricing:
     "Goal: respond to a pricing/inquiry. Do NOT invent numbers; if pricing is not in the conversation, ask for the details needed to quote.",
-  "re-engagement": "Goal: re-engage a quiet contact warmly, giving them an easy reason to reply.",
+  "re-engagement":
+    "Goal: re-engage a quiet contact warmly, giving them an easy reason to reply.",
 };
 
 // How many trailing messages to send to the model by default. The most recent
@@ -51,9 +55,14 @@ export const FULL_CHAT_CAP = 30;
 /** True when the user's instruction explicitly asks to read the whole thread/chat. */
 export function wantsFullChat(instruction?: string): boolean {
   if (!instruction) return false;
-  return /\b(read|use|consider|analyze|analyse)\b[\s\S]{0,30}\b(the\s+)?(complete|full|entire|whole|all)\b[\s\S]{0,20}\b(chat|conversation|thread|history|messages?|emails?)\b/i.test(
-    instruction,
-  ) || /\b(complete|full|entire|whole)\s+(chat|conversation|thread|history)\b/i.test(instruction);
+  return (
+    /\b(read|use|consider|analyze|analyse)\b[\s\S]{0,30}\b(the\s+)?(complete|full|entire|whole|all)\b[\s\S]{0,20}\b(chat|conversation|thread|history|messages?|emails?)\b/i.test(
+      instruction,
+    ) ||
+    /\b(complete|full|entire|whole)\s+(chat|conversation|thread|history)\b/i.test(
+      instruction,
+    )
+  );
 }
 
 /** Keep only the most relevant (most recent) messages unless full chat was requested. */
@@ -142,7 +151,8 @@ export interface BuildPromptArgs {
 function renderThread(thread: PromptThread, userEmail?: string | null): string {
   const lines = [`Subject: ${sanitizeForPrompt(thread.subject)}`, ""];
   for (const msg of thread.messages) {
-    const isUser = userEmail && msg.from.toLowerCase().includes(userEmail.toLowerCase());
+    const isUser =
+      userEmail && msg.from.toLowerCase().includes(userEmail.toLowerCase());
     lines.push(
       `--- Message ${isUser ? "(sent by ME)" : "(received)"} ---`,
       `From: ${sanitizeForPrompt(msg.from)}`,
@@ -159,7 +169,10 @@ function renderThread(thread: PromptThread, userEmail?: string | null): string {
 const OUTPUT_INSTRUCTION =
   'OUTPUT: Return ONLY a JSON object of the form {"reply": "<the reply text>"} and nothing else. Put the entire reply (with line breaks as \\n) in the "reply" field.';
 
-export function buildPrompts(args: BuildPromptArgs): { system: string; prompt: string } {
+export function buildPrompts(args: BuildPromptArgs): {
+  system: string;
+  prompt: string;
+} {
   const isWhatsApp = args.platform === "whatsapp";
   const objectiveLine = args.objective ? OBJECTIVE_GUIDE[args.objective] : "";
 
@@ -188,10 +201,15 @@ export function buildPrompts(args: BuildPromptArgs): { system: string; prompt: s
       .filter(Boolean)
       .join("\n");
 
-    const msgs = limitMessages(args.conversation?.messages ?? [], !!args.readFullChat);
+    const msgs = limitMessages(
+      args.conversation?.messages ?? [],
+      !!args.readFullChat,
+    );
     const conversationContext = msgs
       .map((m) => {
-        const who = m.sender?.displayName || (m.direction === "outgoing" ? "You" : "Them");
+        const who =
+          m.sender?.displayName ||
+          (m.direction === "outgoing" ? "You" : "Them");
         return `${sanitizeForPrompt(who)}: ${sanitizeForPrompt(m.text)}`;
       })
       .join("\n");
@@ -293,7 +311,10 @@ export function extractReply(raw: string): string {
   if (!raw) return "";
   let t = raw.trim();
   // Strip a leading/trailing markdown fence if the model wrapped everything.
-  t = t.replace(/^```[a-z]*\s*/i, "").replace(/```\s*$/i, "").trim();
+  t = t
+    .replace(/^```[a-z]*\s*/i, "")
+    .replace(/```\s*$/i, "")
+    .trim();
 
   // Prefer a JSON object with a "reply" field.
   const match = t.match(/\{[\s\S]*\}/);

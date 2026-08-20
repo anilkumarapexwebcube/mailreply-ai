@@ -12,19 +12,26 @@ export default defineConfig({
         behavior: "error",
         client: {
           files: ["**/server/**"],
-          specifiers: ["server-only"]
-        }
-      }
+          specifiers: ["server-only"],
+        },
+      },
     }),
     react(),
     tailwindcss(),
     tsconfigPaths({ projects: ["./tsconfig.json"] }),
     nitro({
-      preset: "vercel"
+      preset: "vercel",
     }),
   ],
   resolve: {
     alias: { "@": process.cwd() + "/src" },
-    dedupe: ["react", "react-dom", "react/jsx-runtime", "react/jsx-dev-runtime", "@tanstack/react-query", "@tanstack/query-core"]
-  }
+    dedupe: [
+      "react",
+      "react-dom",
+      "react/jsx-runtime",
+      "react/jsx-dev-runtime",
+      "@tanstack/react-query",
+      "@tanstack/query-core",
+    ],
+  },
 });

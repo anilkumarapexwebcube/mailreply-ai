@@ -29,20 +29,25 @@ export async function generateReplyFromAPI(
 ): Promise<string> {
   const { pairingToken } = await chrome.storage.local.get("pairingToken");
   if (!pairingToken) {
-    throw new Error("Not paired. Open the MailReply AI popup and paste your pairing key.");
+    throw new Error(
+      "Not paired. Open the MailReply AI popup and paste your pairing key.",
+    );
   }
 
   let response: Response;
   try {
-    response = await fetch(`${MAILREPLY_API_BASE}/api/public/extension/generate-reply`, {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        "x-mailreply-token": pairingToken,
+    response = await fetch(
+      `${MAILREPLY_API_BASE}/api/public/extension/generate-reply`,
+      {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-mailreply-token": pairingToken,
+        },
+        body: JSON.stringify(payload),
+        ...(signal ? { signal } : {}),
       },
-      body: JSON.stringify(payload),
-      ...(signal ? { signal } : {}),
-    });
+    );
   } catch (err) {
     if (err instanceof DOMException && err.name === "AbortError") throw err;
     // Network-level failure (server down, CORS/host-permission, offline).

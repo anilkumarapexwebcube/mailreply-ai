@@ -1,4 +1,9 @@
-import type { ConversationContext, ConversationMessage, Participant, ChatIdentity } from "../../shared/types";
+import type {
+  ConversationContext,
+  ConversationMessage,
+  Participant,
+  ChatIdentity,
+} from "../../shared/types";
 
 /**
  * Extracts visible messages from the active WhatsApp Web chat DOM.
@@ -26,9 +31,13 @@ function extractVisibleMessages(): ConversationMessage[] {
 
     // Extract text
     // WhatsApp usually stores text in a span with dir="ltr" inside a copyable-text element
-    const copyableText = msgEl.querySelector('div.copyable-text[data-pre-plain-text]');
-    const timestampStr = copyableText ? copyableText.getAttribute("data-pre-plain-text") : "";
-    
+    const copyableText = msgEl.querySelector(
+      "div.copyable-text[data-pre-plain-text]",
+    );
+    const timestampStr = copyableText
+      ? copyableText.getAttribute("data-pre-plain-text")
+      : "";
+
     // The actual visible text span
     const textSpan = msgEl.querySelector('span.selectable-text[dir="ltr"]');
     if (!textSpan) {
@@ -46,9 +55,11 @@ function extractVisibleMessages(): ConversationMessage[] {
     }
 
     const text = textSpan.textContent || "";
-    
+
     // Check if it's quoting another message
-    const isQuoted = Boolean(msgEl.querySelector('span[data-testid="quoted-message"]'));
+    const isQuoted = Boolean(
+      msgEl.querySelector('span[data-testid="quoted-message"]'),
+    );
 
     // Try to find sender name for group chats (usually in a span with dir="auto" at the top of the message bubble)
     let senderName: string | undefined = undefined;
@@ -59,7 +70,9 @@ function extractVisibleMessages(): ConversationMessage[] {
       }
     }
 
-    const sender: Participant | undefined = senderName ? { displayName: senderName, type: "contact" } : undefined;
+    const sender: Participant | undefined = senderName
+      ? { displayName: senderName, type: "contact" }
+      : undefined;
 
     messages.push({
       id: `msg_${messages.length}`,
@@ -83,16 +96,21 @@ function extractVisibleMessages(): ConversationMessage[] {
   });
 }
 
-export async function getConversation(identity: ChatIdentity): Promise<ConversationContext> {
+export async function getConversation(
+  identity: ChatIdentity,
+): Promise<ConversationContext> {
   const messages = extractVisibleMessages();
-  
-  // Try to find the participant name from the identity
-  const participants: Participant[] = [{
-    displayName: identity.title,
-    type: "contact"
-  }];
 
-  const latestMessage = messages.length > 0 ? messages[messages.length - 1] : undefined;
+  // Try to find the participant name from the identity
+  const participants: Participant[] = [
+    {
+      displayName: identity.title,
+      type: "contact",
+    },
+  ];
+
+  const latestMessage =
+    messages.length > 0 ? messages[messages.length - 1] : undefined;
 
   return {
     platform: "whatsapp",

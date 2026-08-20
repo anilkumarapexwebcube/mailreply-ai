@@ -62,7 +62,11 @@ export class WhatsAppAdapter implements ConversationPlatform {
     return getActiveComposer();
   }
 
-  public insertReply(composer: ComposerHandle, text: string, mode?: InsertMode): Promise<void> {
+  public insertReply(
+    composer: ComposerHandle,
+    text: string,
+    mode?: InsertMode,
+  ): Promise<void> {
     return insertReply(composer, text, mode);
   }
 
@@ -74,7 +78,9 @@ export class WhatsAppAdapter implements ConversationPlatform {
         console.warn("[MailReply AI] WhatsApp mount skipped:", err);
       }
     };
-    this.observer = new MutationObserver(() => safe(this.debouncedHandleChanges));
+    this.observer = new MutationObserver(() =>
+      safe(this.debouncedHandleChanges),
+    );
     this.observer.observe(document.body, { childList: true, subtree: true });
     setTimeout(() => safe(() => this.handleDOMChanges()), 2500);
   }
@@ -85,18 +91,24 @@ export class WhatsAppAdapter implements ConversationPlatform {
       if (this.currentChatKey !== detection.identity.key) {
         this.currentChatKey = detection.identity.key;
         document.querySelectorAll(".mrai-wa-btn").forEach((el) => el.remove());
-        // Any open panel belongs to the previous chat — close it to avoid mixing context.
+        // Any open panel belongs to the previous chat — close it (clears the
+        // activePanel ref so the next click opens a fresh one) to avoid mixing context.
+        this.activePanel?.close();
         document.querySelectorAll(".mrai-panel").forEach((el) => el.remove());
       }
       this.mountReplyButton();
     } else if (this.currentChatKey !== null) {
       this.currentChatKey = null;
       document.querySelectorAll(".mrai-wa-btn").forEach((el) => el.remove());
+      this.activePanel?.close();
       document.querySelectorAll(".mrai-panel").forEach((el) => el.remove());
     }
   }
 
-  private async generateReply(params: GenerateParams, signal: AbortSignal): Promise<string> {
+  private async generateReply(
+    params: GenerateParams,
+    signal: AbortSignal,
+  ): Promise<string> {
     const startKey = this.currentChatKey;
     const context = await this.getConversation();
 
@@ -144,7 +156,10 @@ export class WhatsAppAdapter implements ConversationPlatform {
   }
 
   private async persistInstruction(instruction: string) {
-    this.settings.savedInstructions = addSavedInstruction(this.settings.savedInstructions, instruction);
+    this.settings.savedInstructions = addSavedInstruction(
+      this.settings.savedInstructions,
+      instruction,
+    );
     await saveSettings(this.settings);
   }
 
